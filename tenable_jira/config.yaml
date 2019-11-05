@@ -1,0 +1,238 @@
+# The project definition is passed directly to the project creator if no project
+# by the specified key does not exist.
+project:
+  key: VULN
+  name: Vulnerability Management
+  projectTypeKey: business
+  projectTemplateKey: com.atlassian.jira-core-project-templates:jira-core-simplified-task-tracking
+  description: Managing vulnerabilities discovered from Tenable products.
+  url: https://tenable.com
+  assigneeType: unassigned
+  leadAccountId:
+
+issue_types:
+  - name: Vulnerability
+    type: standard
+    search:
+      - Tenable Plugin ID
+    transitions:
+      open:
+      fixed:
+      reopened:
+  - name: Vulnerability Instance
+    type: subtask
+    search:
+      - Tenable Plugin ID
+      - Tenable Asset UUID
+      - Device IPv4
+      - Device IPv6
+      - Vulnerability Port
+      - Vulnerability Protocol
+    transitions:
+      open:
+      fixed:
+      reopened:
+
+# The custom fields are created automatically if they do not exist.  Further the
+# mapping between the jira_field and the tio_field & tsc_field indicate what
+# data is passed into the Jira custom field.
+fields:
+  # Vulnerability fields
+  - jira_field: CVEs
+    type: labels
+    searcher: labelsearcher
+    issue_type:
+      - Vulnerability
+    tio_field: plugin.cve
+
+  - jira_field: CVSSv2 Base Score
+    type: readonlyfield
+    searcher: textsearcher
+    issue_type:
+      - Vulnerability
+    tio_field: plugin.cvss_base_score
+
+  - jira_field: CVSSv2 Temporal Score
+    type: readonlyfield
+    searcher: textsearcher
+    issue_type:
+      - Vulnerability
+    tio_field: plugin.cvss_temporal_score
+
+  - jira_field: CVSSv3 Base Score
+    type: readonlyfield
+    searcher: textsearcher
+    issue_type:
+      - Vulnerability
+    tio_field: plugin.cvss3_base_score
+
+  - jira_field: CVSSv3 Temporal Score
+    type: readonlyfield
+    searcher: textsearcher
+    issue_type:
+      - Vulnerability
+    tio_field: plugin.cvss3_temporal_score
+
+  - jira_field: Tenable Plugin ID
+    type: readonlyfield
+    searcher: textsearcher
+    issue_type:
+      - Vulnerability
+      - Vulnerability Instance
+    tio_field: plugin.id
+
+  - jira_field: Tenable Plugin Family
+    type: readonlyfield
+    searcher: textsearcher
+    issue_type:
+      - Vulnerability
+    tio_field: plugin.family
+
+  - jira_field: Tenable Plugin Name
+    type: readonlyfield
+    searcher: textsearcher
+    issue_type:
+      - Vulnerability
+      - Vulnerability Instance
+    tio_field: plugin.name
+
+  - jira_field: Vulnerability Severity
+    type: readonlyfield
+    searcher: textsearcher
+    issue_type:
+      - Vulnerability
+    tio_field: plugin.risk_factor
+
+  - jira_field: Vulnerability Synopsis
+    type: textarea
+    searcher: textsearcher
+    issue_type:
+      - Vulnerability
+    tio_field: plugin.synopsis
+
+  - jira_field: Vulnerability Description
+    type: textarea
+    searcher: textsearcher
+    issue_type:
+      - Vulnerability
+    tio_field: plugin.description
+
+  - jira_field: Vulnerability Solution
+    type: textarea
+    searcher: textsearcher
+    issue_type:
+      - Vulnerability
+    tio_field: plugin.solution
+
+
+  # Vulnerability Instance fields
+  - jira_field: Tenable Asset UUID
+    type: labels
+    searcher: labelsearcher
+    issue_type:
+      - Vulnerability Instance
+    tio_field: asset.uuid
+
+  - jira_field: Device MAC Addresses
+    type: textarea
+    searcher: textsearcher
+    issue_type:
+      - Vulnerability Instance
+    tio_field: asset.mac_address
+
+  - jira_field: Device IPv4 Addresses
+    type: labels
+    searcher: labelsearcher
+    issue_type:
+      - Vulnerability Instance
+    tio_field: asset.ipv4
+
+
+  - jira_field: Device IPv6 Addresses
+    type: labels
+    searcher: labelsearcher
+    issue_type:
+      - Vulnerability Instance
+    tio_field: asset.ipv6
+
+  - jira_field: Device Hostname
+    type: labels
+    searcher: labelsearcher
+    issue_type:
+      - Vulnerability Instance
+    tio_field: asset.hostname
+
+  - jira_field: Device NetBIOS Name
+    type: readonlyfield
+    searcher: textsearcher
+    issue_type:
+      - Vulnerability Instance
+    tio_field:
+
+  - jira_field: Device Network ID
+    type: readonlyfield
+    searcher: textsearcher
+    issue_type:
+      - Vulnerability Instance
+    tio_field: asset.network_id
+
+  - jira_field: Vulnerability Output
+    type: textarea
+    searcher: textsearcher
+    issue_type:
+      - Vulnerability Instance
+    tio_field: output
+
+  - jira_field: Vulnerability First Seen
+    type: datetime
+    searcher: datetimerange
+    issue_type:
+      - Vulnerability Instance
+    tio_field: first_seen
+
+  - jira_field: Vulnerability Last Seen
+    type: datetime
+    searcher: datetimerange
+    issue_type:
+      - Vulnerability Instance
+    tio_field: last_seen
+
+  - jira_field: Vulnerability Last Fixed
+    type: datetime
+    searcher: datetimerange
+    issue_type:
+      - Vulnerability Instance
+    tio_field: last_fixed
+
+  - jira_field: Vulnerability State
+    type: readonlyfield
+    searcher: textsearcher
+    issue_type:
+      - Vulnerability Instance
+    tio_field: state
+
+  - jira_field: Vulnerability Port
+    type: readonlyfield
+    searcher: textsearcher
+    issue_type:
+      - Vulnerability Instance
+    tio_field: port.port
+
+  - jira_field: Vulnerability Protocol
+    type: readonlyfield
+    searcher: textsearcher
+    issue_type:
+      - Vulnerability Instance
+    tio_field: port.protocol
+
+  - jira_field: Vulnerability Repository ID
+    type: readonlyfield
+    searcher: textsearcher
+    issue_type:
+      - Vulnerability Instance
+
+  - jira_field: Vulnerability Repository Name
+    type: readonlyfield
+    searcher: textsearcher
+    issue_type:
+      - Vulnerability Instance
