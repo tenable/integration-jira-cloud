@@ -1,4 +1,4 @@
-import yaml, logging
+import logging
 from hashlib import md5
 from pkg_resources import resource_string as embedded
 from .utils import flatten
@@ -8,29 +8,16 @@ from tenable.sc.analysis import AnalysisResultsIterator
 
 class Tio2Jira:
     '''Custom Field mapping'''
-    def __init__(self, config_file=None):
+    def __init__(self, config):
         # Create the logging facility
         self._log = logging.getLogger('{}.{}'.format(
             self.__module__, self.__class__.__name__))
-
-        # if a configfile was specified, then we will use that file, otherwise
-        # we will use the embedded default config file.
-        if config_file:
-            config = self._read_yaml_file(config_file)
-        else:
-            config = self._read_yaml_file(embedded(__name__, 'config.yaml'))
+        self.config = config
 
         # perform the basic creation actions and store the results.
         self._project = self._jira.projects.upsert(config['project'])
         self._fields = self._jira.fields.upsert(config['fields'])
         self._issue_types = self._jira.fields.upsert(config['issue_types'])
-
-    def _read_yaml_file(self, filename):
-        '''
-        A simple convenience method to read a YAML config and return the
-        resulting python dictionary structure.
-        '''
-        return yaml.load(open(filename), Loader=yaml.CLoader)
 
     def create_issues(self, vulns):
         '''
