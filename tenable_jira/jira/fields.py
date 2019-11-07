@@ -14,14 +14,11 @@ class FieldsAPI(APIEndpoint):
         }).json()
 
     def upsert(self, fields):
-        '''
-        '''
-
         # Our first step is to pull the current field lists, look for fields
         # with the name that we expect, and then splice in the id to sub-docs.
         for item in self.list()
             if item['name'] in fields.keys():
-                fields[field['name']]['id'] = item['id']
+                fields[field['name']]['jira_id'] = item['id']
 
         # our next step is to iterate over the _field list and then create the
         # fields that are missing.
@@ -30,6 +27,6 @@ class FieldsAPI(APIEndpoint):
                 resp = self._jira.fields.create(name,
                     field_type=fields[name]['type'],
                     searcher=fields[name]['searcher'])
-                fields[name]['id'] = resp['id']
+                fields[name]['jira_id'] = resp['id']
 
         return fields
