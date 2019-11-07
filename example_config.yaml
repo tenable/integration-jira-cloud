@@ -1,3 +1,39 @@
+tenable:
+  # What platform whould we be connecting to?
+  #  Must be either tenable.io and tenable.sc
+  platform: tenable.io
+
+  # Tenable.io or Tenable.sc API Access Key
+  access_key:
+
+  # Tenable.io or Tenable.sc API Secret Key
+  secret_key:
+
+  # The hostname for the Tenable.sc host
+  hostname:
+
+  # The port number on Tenable.sc to connect to
+  port: 443
+
+  # Note that Tenable.sc supports either session authentication or key
+  # authentication.  You only need to provide one or the other.
+  #
+  # The username to use for Tenable.sc session auth.
+  username:
+
+  # The password to use for Tenable.sc session auth.
+
+jira:
+  # The API Token to use to authenticate to the Jira application
+  api_token:
+
+  # The User that will be authenticaing to the Jira application
+  api_username:
+
+  # The url pointing to the Jira application. The connector leverages the v3
+  # APIs, so please ensure that the correct path is passed.
+  url: https://your-domain.atlassian.net/rest/api/3
+
 # The project definition is passed directly to the project creator if no project
 # by the specified key does not exist.
 project:
@@ -10,6 +46,7 @@ project:
   assigneeType: unassigned
   leadAccountId:
 
+
 issue_types:
   - name: Vulnerability
     type: standard
@@ -17,7 +54,7 @@ issue_types:
       - Tenable Plugin ID
     transitions:
       open:
-      fixed:
+      fixed: closed
       reopened:
   - name: Vulnerability Instance
     type: subtask
@@ -30,13 +67,25 @@ issue_types:
       - Vulnerability Protocol
     transitions:
       open:
-      fixed:
+      fixed: closed
       reopened:
 
 # The custom fields are created automatically if they do not exist.  Further the
 # mapping between the jira_field and the tio_field & tsc_field indicate what
 # data is passed into the Jira custom field.
 fields:
+
+# An example of a specified field is as follows:
+# - jira_field: NAME    - Name of the Jira Field. We search for this w/in the API.
+#   jira_id: ID         - If specified, use this field ID instead of creating.
+#   type: DATATYPE      - The type of data that will be stored here.
+#   searcher: SEARCHER  - The Jira searcher to use for searching in Jira
+#   issue_type:         - The issue types that this field is to be associated with.
+#     - TYPE1
+#     - TYPE2
+#   tio_field: field.name - Tenable.io field to parse for this JIRA field.
+#   tsc_field: field.name - Tenable.sc field to parse for this JIRA field.
+
   # Vulnerability fields
   - jira_field: CVEs
     type: labels
