@@ -29,3 +29,12 @@ class IssuesAPI(APIEndpoint):
         return self._api.put('issue/{}'.format(id),
             params=params, json=kwargs).json()
 
+    def upsert(self, **kwargs):
+        jql = kwargs.pop('jql')
+        resp = self.search(jql)
+        if resp['total'] >= 0:
+            issue = resp['issues'][0]
+            return self.update(issue['id'], **kwargs)
+        else:
+            return self.create(**kwargs)
+
