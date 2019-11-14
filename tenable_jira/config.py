@@ -52,10 +52,8 @@ jira:
   # The User that will be authenticaing to the Jira application
   api_username:
 
-  # The url pointing to the Jira application. The connector leverages the v3
-  # APIs, so please ensure that the correct path is passed.
-  url: https://your-domain.atlassian.net/rest/api/3
-
+  # The address pointing to the Jira application.
+  address: your-domain.atlassian.net
 
 # The project definition is passed directly to the project creator if no project
 # by the specified key does not exist.

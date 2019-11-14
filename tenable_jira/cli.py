@@ -58,7 +58,7 @@ def cli(configfile, verbose, observed_since, run_every):
     )
 
     jira = Jira(
-        config['jira']['url'],
+        'https://{}/rest/api/3'.format(config['jira']['address']),
         config['jira']['api_username'],
         config['jira']['api_token']
     )
