@@ -227,13 +227,29 @@ class Tio2Jira:
                 if self.subtask['name'] in f['issue_type']:
                     subissue[f['jira_id']] = processed
 
-            if f['jira_field'] in self.task['search']:
-                jql.append('"{}" {} "{}"'.format(
-                    f['jira_field'], oper, processed))
+            # Handle any JQL conversions that need to be done in order to make
+            # the JQL statement valid.
+            if isinstance(processed, list):
+                if len(processed) > 1:
+                    oper = "in"
+                    svalue = '({})'.format(
+                        ','.join(["{}".format(x) for x in processed]))
+                else:
+                    svalue = processed[0]
+            elif not processed:
+                oper = "is"
+                svalue = "EMPTY"
+            else:
+                svalue = '"{}"'.format(processed)
 
+            # construct the JQL statement
+            jql_statement = '"{}" {} {}'.format(f['jira_field'], oper, svalue)
+
+            # Add the JQL statement as necessary to the appropriate JQL queries.
+            if f['jira_field'] in self.task['search']:
+                jql.append(jql_statement)
             if f['jira_field'] in self.subtask['search']:
-                sjql.append('"{}" {} "{}"'.format(
-                    f['jira_field'], oper, processed))
+                sjql.append(jql_statement)
 
         # Now to process the default fields.
         for field in self.config['issue_default_fields']:
@@ -246,8 +262,24 @@ class Tio2Jira:
                     vuln, fid, fdef[self.subtask['name']])
         return issue, subissue, jql, sjql
 
+    def _close_issue(self, issue):
+        '''
+        Perform the close action for an issue.
+        '''
+        done = None
+        transitions = self._jira.issues.get_transitions(issue['id'])
+        for t in transitions['transitions']:
+            if t['name'] in ['Closed', 'Done', 'Resolved']:
+                done = t['id']
+        self._log.info('CLOSING {} {}'.format(
+            issue['key'], issue['fields']['summary']))
+        self._jira.issues.transition(issue['id'],
+            transition={'id': done})
 
     def _process_open_vuln(self, vuln, fid):
+        '''
+        perform the necessary actions for opening/updating tasks and sub-tasks.
+        '''
         # Pass off the processing of the issue and subissue to _process_vuln
         issue, subissue, jql, sjql = self._process_vuln(vuln, fid)
 
@@ -259,20 +291,39 @@ class Tio2Jira:
             self._jira.issues.upsert(fields=subissue, jql=' and '.join(sjql))
 
     def _process_closed_vuln(self, vuln, fid):
+        '''
+        Run through closing tasks and sub-tasks as necessary.
+        '''
         # Pass off the processing of the issue and subissue to _process_vuln
         issue, subissue, jql, sjql = self._process_vuln(vuln, fid)
 
+        # for subtasks, we will simply search to verify that they're still in
+        # an open state and then close any issues that are returned.
         if self.subtask:
             issues = self._jira.issues.search(' and '.join(sjql))
             if issues['total'] > 0:
                 for i in issues['issues']:
-                    transitions = self._jira.issues.get_transitions(i['id'])
-                    done = None
-                    for t in transitions['transitions']:
-                        if t['name'] in ['Closed', 'Done', 'Resolved']:
-                            done = t['id']
-                    self._jira.issues.transition(i['id'],
-                        transition={'id': done})
+                    self._close_issue(i)
+
+        # parent issues are treated differently.  If all of the subitems are
+        # closed, only then will we close the parent items.
+        parents = self._jira.issues.search(' and '.join(jql))
+        if parents['total'] > 0:
+            for p in parents['issues']:
+                # Here we will get the subtasks, and then iterate through their
+                # statuses to ensure that all of them are in a closed state.  If
+                # any of the issues are still open in any form, then we will
+                # flip the "perform_close" flag to False.
+                subs = p['fields']['subtasks']
+                perform_close = True
+                for s in [i['fields']['status']['name'] for i in subs]:
+                    if s not in ['Closed', 'Done', 'Resolved']:
+                        perform_close = False
+
+                # If the perform_close flag is still True, then we will proceed
+                # with closing the parent issue.
+                if perform_close:
+                    self._close_issue(p)
 
     def create_issues(self, vulns):
         '''
@@ -341,6 +392,7 @@ class Tio2Jira:
             # the close_issues method.
             closed = self._src.exports.vulns(
                 last_fixed=observed_since,
+                state=['fixed'],
                 severity=self.config['tenable']['tio_severities'],
                 num_assets=self.config['tenable']['tio_chunk_size'])
             self.close_issues(closed)
