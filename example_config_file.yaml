@@ -1,0 +1,17 @@
+tenable:
+  # Tenable.io or API Access Key
+  access_key:
+
+  # Tenable.io or API Secret Key
+  secret_key:
+
+jira:
+  # The API Token to use to authenticate to the Jira application
+  api_token:
+
+  # The User that will be authenticaing to the Jira application
+  api_username:
+
+  # The url pointing to the Jira application. The connector leverages the v3
+  # APIs, so please ensure that the correct path is passed.
+  url: https://your-domain.atlassian.net/rest/api/3
