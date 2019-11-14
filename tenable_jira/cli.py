@@ -24,6 +24,8 @@ SOFTWARE.
 '''
 import click, logging, time, yaml
 from tenable.io import TenableIO
+from .config import base_config
+from restfly.utils import dict_merge
 from .jira import Jira
 from .transform import Tio2Jira
 from . import __version__
@@ -49,7 +51,11 @@ def cli(configfile, verbose, observed_since, run_every):
         logging.basicConfig(level=logging.DEBUG)
 
     logging.debug('Using configuration file {}'.format(configfile.name))
-    config = yaml.load(configfile, Loader=yaml.CLoader)
+
+    config = dict_merge(
+        base_config(),
+        yaml.load(configfile, Loader=yaml.CLoader)
+    )
 
     jira = Jira(
         config['jira']['url'],

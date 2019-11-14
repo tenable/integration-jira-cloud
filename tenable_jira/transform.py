@@ -2,7 +2,6 @@ import logging, time, arrow, json
 from hashlib import md5
 from pkg_resources import resource_string as embedded
 from .utils import flatten
-from restfly.utils import dict_merge
 from tenable.io import TenableIO
 from tenable.sc import TenableSC
 from tenable.io.exports import ExportsIterator
@@ -16,7 +15,6 @@ class Tio2Jira:
         self._log = logging.getLogger('{}.{}'.format(
             self.__module__, self.__class__.__name__))
         self.config = config
-
         # perform the basic creation actions and store the results.
         self._project = self._jira.projects.upsert(**config['project'])
         self._fields = self._jira.fields.upsert(config['fields'])
@@ -333,7 +331,7 @@ class Tio2Jira:
             # the criticality rating described.  Then pass the export iterator
             # to the create_issues method.
             vulns = self._src.exports.vulns(
-                last_observed=observed_since,
+                last_found=observed_since,
                 severity=self.config['tenable']['tio_severities'],
                 num_assets=self.config['tenable']['tio_chunk_size'])
             self.create_issues(vulns)
