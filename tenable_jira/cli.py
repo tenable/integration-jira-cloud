@@ -24,7 +24,7 @@ SOFTWARE.
 '''
 import click, logging, time, yaml
 from tenable.io import TenableIO
-from .jira import JiraCloud
+from .jira import Jira
 from .transform import Tio2Jira
 from . import __version__
 
@@ -33,12 +33,10 @@ from . import __version__
     count=True, help='Logging Verbosity')
 @click.option('--observed-since', '-s', envvar='SINCE', default=0,
     type=click.INT, help='The unix timestamp of the age threshold')
-@click.option('--batch-size', '-b', envvar='BATCH_SIZE', default=100,
-    type=click.INT, help='Export/Import Batch Sizing')
 @click.option('--run-every', '-r', envvar='RUN_EVERY',
     type=click.INT, help='How many hours between recurring imports')
-@click.argument('configfile', default='config.yaml', default=click.File('r'))
-def cli(configfile, verbose, observed_since, run_every, batch_size):
+@click.argument('configfile', default='config.yaml', type=click.File('r'))
+def cli(configfile, verbose, observed_since, run_every):
     '''
     Tenable.io -> IBM CloudPak for Security Transformer & Ingester
     '''
@@ -53,7 +51,11 @@ def cli(configfile, verbose, observed_since, run_every, batch_size):
     logging.debug('Using configuration file {}'.format(configfile.name))
     config = yaml.load(configfile, Loader=yaml.CLoader)
 
-    jira = JiraCloud()
+    jira = Jira(
+        config['jira']['url'],
+        config['jira']['api_username'],
+        config['jira']['api_token']
+    )
 
     # Initiate the Tenable.io API model, the Ingester model, and start the
     # ingestion and data transformation.
@@ -72,7 +74,7 @@ def cli(configfile, verbose, observed_since, run_every, batch_size):
         logging.error('No valid Tenable platform configuration defined.')
         exit(1)
     ingest = Tio2Jira(source, jira, config)
-    ingest.ingest(observed_since, batch_size)
+    ingest.ingest(observed_since)
 
     # If we are expected to continually re-run the transformer, then we will
     # need to track the passage of time and run every X hours, where X is
@@ -86,4 +88,4 @@ def cli(configfile, verbose, observed_since, run_every, batch_size):
             time.sleep(sleeper)
             logging.info(
                 'Initiating ingest with observed_since={}'.format(last_run))
-            ingest.ingest(last_run, batch_size)
+            ingest.ingest(last_run)
