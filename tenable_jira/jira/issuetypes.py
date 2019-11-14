@@ -2,10 +2,10 @@ from restfly.endpoint import APIEndpoint
 
 class IssueTypesAPI(APIEndpoint):
     def list(self):
-        return self._api.get('issuetypes').json()
+        return self._api.get('issuetype').json()
 
     def details(self, id):
-        return self._api.get('isuetype/{}'.format(id)).json()
+        return self._api.get('issuetype/{}'.format(id)).json()
 
     def create(self, **kwargs):
         return self._api.post('issuetype', json=kwargs).json()
@@ -14,11 +14,11 @@ class IssueTypesAPI(APIEndpoint):
         return self._api.put('issuetype/{}'.format(id), json=kwargs).json()
 
     def upsert(self, issuetypes):
-        itypes = self._list()
+        itypes = self.list()
         for issuetype in issuetypes:
             for itype in itypes:
                 if (itype['name'] == issuetype['name']
-                  or itype['id'] == issuetype['jira_id']):
+                  or itype['id'] == issuetype.get('jira_id')):
                     issuetype['jira_id'] = itype['id']
 
         for issuetype in issuetypes:

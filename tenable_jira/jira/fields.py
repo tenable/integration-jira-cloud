@@ -13,20 +13,25 @@ class FieldsAPI(APIEndpoint):
             'description': description if description else ''
         }).json()
 
+    def screens(self, id, **kwargs):
+        return self._api.get(
+            'field/{}/screens'.format(id), params=kwargs).json()
+
     def upsert(self, fields):
         # Our first step is to pull the current field lists, look for fields
         # with the name that we expect, and then splice in the id to sub-docs.
-        for item in self.list()
-            if item['name'] in fields.keys():
-                fields[field['name']]['jira_id'] = item['id']
+        flist = self.list()
+        for field in fields:
+            for item in flist:
+                if item['name'] == field['jira_field']:
+                    field['jira_id'] = item['id']
 
         # our next step is to iterate over the _field list and then create the
         # fields that are missing.
-        for name in fields.keys():
-            if 'id' not in fields[name]:
-                resp = self._jira.fields.create(name,
-                    field_type=fields[name]['type'],
-                    searcher=fields[name]['searcher'])
-                fields[name]['jira_id'] = resp['id']
-
+        for field in fields:
+            if 'jira_id' not in field:
+                resp = self.create(field['jira_field'],
+                    field_type=field['type'],
+                    searcher=field['searcher'])
+                field['jira_id'] = resp['id']
         return fields

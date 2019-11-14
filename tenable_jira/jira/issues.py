@@ -27,14 +27,21 @@ class IssuesAPI(APIEndpoint):
             'overrideEditableFlag': str(kwargs.pop('overrideEditableFlag', False)).lower(),
         }
         return self._api.put('issue/{}'.format(id),
-            params=params, json=kwargs).json()
+            params=params, json=kwargs)
+
+    def get_transitions(self, id):
+        return self._api.get('issue/{}/transitions'.format(id)).json()
+
+    def transition(self, id, **kwargs):
+        return self._api.post('issue/{}/transitions'.format(id), json=kwargs)
 
     def upsert(self, **kwargs):
         jql = kwargs.pop('jql')
         resp = self.search(jql)
-        if resp['total'] >= 0:
+        if resp['total'] > 0:
             issue = resp['issues'][0]
-            return self.update(issue['id'], **kwargs)
+            self.update(issue['id'], **kwargs)
+            return issue
         else:
             return self.create(**kwargs)
 
