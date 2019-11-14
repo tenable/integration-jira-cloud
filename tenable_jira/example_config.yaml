@@ -1,3 +1,5 @@
+# this is a standalone version of the embedded copnfig within config.py
+
 tenable:
   # What platform whould we be connecting to?
   #  Must be either tenable.io and tenable.sc
