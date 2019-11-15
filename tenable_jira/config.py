@@ -169,6 +169,7 @@ screen:
   tabs:
     Vulnerability:
       - CVEs
+      - Tenable VPR Score
       - CVSSv2 Base Score
       - CVSSv2 Temporal Score
       - CVSSv3 Base Score
@@ -187,6 +188,7 @@ screen:
       - Tenable Asset UUID
       - Device Hostname
       - Device NetBIOS Name
+      - Device DNS Name
       - Device IPv4 Addresses
       - Device IPv6 Addresses
       - Device MAC Addresses
@@ -337,7 +339,7 @@ fields:
       - Sub-task
     tsc_field: netbiosName
 
-  - field_name: Device DNS Name
+  - jira_field: Device DNS Name
     type: readonlyfield
     searcher: textsearcher
     issue_type:
