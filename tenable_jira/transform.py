@@ -26,7 +26,7 @@ class Tio2Jira:
         '''
         Builds the Field->Screen mapping as is necessary based off the
         configuration.  This code makes some shaky assumptions, as the API
-        dopesn't seem to provide a direct linkage between the project and the
+        doesn't seem to provide a direct linkage between the project and the
         screen.  Ideally for more complex deployments a jira_id should be
         specified with the screen ids that we want to be managing.
         '''
@@ -374,7 +374,13 @@ class Tio2Jira:
             self._process_closed_vuln(v, fid)
 
     def ingest(self, observed_since):
+        '''
+        Perform the vuln ingestion and trnasformation.
 
+        Args:
+            observed_since (int):
+                Unix Timestamp detailing the threshold for vuln age.
+        '''
         # if the source instance is a Tenable.io object, then we will initiate
         # the appropriate export calls.
         if isinstance(self._src, TenableIO):
