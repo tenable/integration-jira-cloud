@@ -3,6 +3,17 @@ import yaml
 def base_config():
     return yaml.load(config, Loader=yaml.CLoader)
 
+# WARNING: These are the default values that control how the transformer
+#          processes vulnerability data into Jira tickets.  While the code
+#          itself is meant to be very flexible, it's quite easy to shoot
+#          yourself in the foot.  The complete configuration has therefor
+#          been vendored below and parameters are overridden from the supplied
+#          config file.  Overloading any values not explicitly documented in
+#          the documentation is considered custom modification and will not be
+#          officially supported as part of this out-of-the box integration.
+#
+#          In short, MODIFY AT YOUR OWN RISK.
+
 config = '''
 tenable:
   # What platform should we be connecting to?
@@ -206,6 +217,7 @@ fields:
     issue_type:
       - Task
     tio_field: plugin.cve
+    tsc_field: cve
 
   - jira_field: CVSSv2 Base Score
     type: readonlyfield
@@ -214,6 +226,7 @@ fields:
       - Task
       - Sub-task
     tio_field: plugin.cvss_base_score
+    tsc_field: baseScore
 
   - jira_field: CVSSv2 Temporal Score
     type: readonlyfield
@@ -222,6 +235,7 @@ fields:
       - Task
       - Sub-task
     tio_field: plugin.cvss_temporal_score
+    tsc_field: temporalScore
 
   - jira_field: CVSSv3 Base Score
     type: readonlyfield
@@ -230,6 +244,7 @@ fields:
       - Task
       - Sub-task
     tio_field: plugin.cvss3_base_score
+    tsc_field: cvssV3BaseScore
 
   - jira_field: CVSSv3 Temporal Score
     type: readonlyfield
@@ -238,6 +253,7 @@ fields:
       - Task
       - Sub-task
     tio_field: plugin.cvss3_temporal_score
+    tsc_field: cvssV3TemporalScore
 
   - jira_field: Tenable Plugin ID
     type: readonlyfield
@@ -246,6 +262,7 @@ fields:
       - Task
       - Sub-task
     tio_field: plugin.id
+    tsc_field: pluginID
 
   - jira_field: Tenable Plugin Family
     type: readonlyfield
@@ -254,6 +271,7 @@ fields:
       - Task
       - Sub-task
     tio_field: plugin.family
+    tsc_field: family.name
 
   - jira_field: Tenable Plugin Name
     type: readonlyfield
@@ -262,6 +280,7 @@ fields:
       - Task
       - Sub-task
     tio_field: plugin.name
+    tsc_field: pluginName
 
   - jira_field: Vulnerability Severity
     type: readonlyfield
@@ -270,6 +289,7 @@ fields:
       - Task
       - Sub-task
     tio_field: plugin.risk_factor
+    tsc_field: severity.name
 
   # Vulnerability Instance fields
   - jira_field: Tenable Asset UUID
@@ -285,6 +305,7 @@ fields:
     issue_type:
       - Sub-task
     tio_field: asset.mac_address
+    tsc_field: macAddress
 
   - jira_field: Device IPv4 Addresses
     type: labels
@@ -292,6 +313,7 @@ fields:
     issue_type:
       - Sub-task
     tio_field: asset.ipv4
+    tsc_field: ip
 
   - jira_field: Device IPv6 Addresses
     type: labels
@@ -306,13 +328,22 @@ fields:
     issue_type:
       - Sub-task
     tio_field: asset.hostname
+    tsc_field: dnsName
 
   - jira_field: Device NetBIOS Name
     type: readonlyfield
     searcher: textsearcher
     issue_type:
       - Sub-task
-    tio_field:
+    tsc_field: netbiosName
+
+  - field_name: Device DNS Name
+    type: readonlyfield
+    searcher: textsearcher
+    issue_type:
+      - Sub-task
+    tio_field: asset.fqdn
+    tsc_field: dnsName
 
   - jira_field: Device Network ID
     type: readonlyfield
@@ -327,6 +358,7 @@ fields:
     issue_type:
       - Sub-task
     tio_field: first_seen
+    tsc_field: firstSeen
 
   - jira_field: Vulnerability Last Seen
     type: datetime
@@ -334,6 +366,7 @@ fields:
     issue_type:
       - Sub-task
     tio_field: last_seen
+    tsc_field: lastSeen
 
   - jira_field: Vulnerability Last Fixed
     type: datetime
@@ -355,6 +388,7 @@ fields:
     issue_type:
       - Sub-task
     tio_field: port.port
+    tsc_field: port
 
   - jira_field: Vulnerability Protocol
     type: readonlyfield
@@ -362,16 +396,28 @@ fields:
     issue_type:
       - Sub-task
     tio_field: port.protocol
+    tsc_field: protocol
 
   - jira_field: Vulnerability Repository ID
     type: readonlyfield
     searcher: textsearcher
     issue_type:
       - Sub-task
+    tsc_field: repository.id
 
   - jira_field: Vulnerability Repository Name
     type: readonlyfield
     searcher: textsearcher
     issue_type:
       - Sub-task
+    tsc_field: repository.name
+
+  - jira_field: Tenable VPR Score
+    type: readonlyfield
+    searcher: textsearcher
+    issue_type:
+      - Task
+      - Sub-task
+    tio_field: plugin.vpr.score
+    tsc_field: vprScore
 '''
