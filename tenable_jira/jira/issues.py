@@ -40,10 +40,13 @@ class IssuesAPI(APIEndpoint):
         resp = self.search(jql)
         if resp['total'] > 0:
             issue = resp['issues'][0]
-            self._log.info('UPDATED {} {}'.format(issue['key'], issue['fields']['summary']))
+            self._log.info('UPDATED {} {}'.format(
+                issue['key'], issue['fields']['summary']))
             self.update(issue['id'], **kwargs)
             return issue
         else:
             issue = self.create(**kwargs)
-            self._log.info('CREATED {} {}'.format(issue['key'], issue['fields']['summary']))
+            self._log.info('CREATED {} {}'.format(
+                issue['key'], kwargs['fields']['summary']))
+            return issue
 
