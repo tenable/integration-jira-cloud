@@ -40,7 +40,7 @@ from . import __version__
 @click.argument('configfile', default='config.yaml', type=click.File('r'))
 def cli(configfile, verbose, observed_since, run_every):
     '''
-    Tenable.io -> IBM CloudPak for Security Transformer & Ingester
+    Tenable.io -> Jira Cloud Transformer & Ingester
     '''
     # Setup the logging verbosity.
     if verbose == 0:
