@@ -112,11 +112,11 @@ tenable-jira config.yaml
 Run once and only import findings that have been seen since yesterday:
 
 ```
-tenable-jira -s $(date -v-1d +%s)
+tenable-jira -s $(date -v-1d +%s) config.yaml
 ```
 
 Run the import every 24 hours
 
 ```
-tenable-jira -r 24
+tenable-jira -r 24 config.yaml
 ```
