@@ -14,3 +14,28 @@ jira:
 
   # The address pointing to the Jira application.
   address: your-domain.atlassian.net
+
+project:
+  # The lead account id for the primary user for the project.
+  leadAccountId: 557058:071b0552-f7ed-4fe4-a718-891ea15592a0
+
+# The following log definitions are optional.  Only specify these if you want
+# to change the default logging behavior of only outputting warnings and errors
+# to the screen.
+log:
+  # What is the logging level desired?  Available levels are:
+  #   debug, info, warn, error
+  # The default level if unspecified is "warn"
+  level: warn
+
+  # If you would like the log output to goto a file instead of standard output,
+  # then specify the filename here:
+  filename: /path/to/logfile.log
+
+  # The following section is optional.  You should only specify this section if
+  # you would like the bridge to run as a service with it's own timer.
+  service:
+    # How many hours should we wait between jobs?  Note setting this to a
+    # non-zero number will result in imports past the initial import will use
+    # time of the last completed import as the basis for last observed.
+    interval: 24

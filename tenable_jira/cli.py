@@ -22,7 +22,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
-import click, logging, time, yaml
+import click, logging, time, yaml, json, platform, sys
 from tenable.io import TenableIO
 from .config import base_config
 from restfly.utils import dict_merge
@@ -31,32 +31,37 @@ from .transform import Tio2Jira
 from . import __version__
 
 @click.command()
-@click.option('--verbose', '-v', envvar='VERBOSITY', default=0,
-    count=True, help='Logging Verbosity')
 @click.option('--observed-since', '-s', envvar='SINCE', default=0,
     type=click.INT, help='The unix timestamp of the age threshold')
-@click.option('--run-every', '-r', envvar='RUN_EVERY',
-    type=click.INT, help='How many hours between recurring imports')
 @click.argument('configfile', default='config.yaml', type=click.File('r'))
-def cli(configfile, verbose, observed_since, run_every):
+def cli(configfile, observed_since):
     '''
     Tenable.io -> Jira Cloud Transformer & Ingester
     '''
-    # Setup the logging verbosity.
-    if verbose == 0:
-        logging.basicConfig(level=logging.WARNING)
-    if verbose == 1:
-        logging.basicConfig(level=logging.INFO)
-    if verbose > 1:
-        logging.basicConfig(level=logging.DEBUG)
-
-    logging.debug('Using configuration file {}'.format(configfile.name))
-
     config = dict_merge(
         base_config(),
         yaml.load(configfile, Loader=yaml.CLoader)
     )
 
+    # Get the logging definition and define any defaults as need be.
+    log = config.get('log', {})
+    log_lvls = {'debug': 10, 'info': 20, 'warn': 30, 'error': 40}
+    log['level'] = log_lvls[log.get('level', 'warn')]
+    log['format'] = log.get('format',
+        '%(asctime)-15s %(name)s %(levelname)s %(message)s')
+
+    # Configure the root logging facility
+    logging.basicConfig(**log)
+
+    # Output some basic information detailing the config file used and the
+    # python version & system arch.
+    logging.info('Using configuration file {}'.format(configfile.name))
+    uname = platform.uname()
+    logging.info('Running on Python {} {}/{}'.format(
+        '.'.join([str(i) for i in sys.version_info][0:3]),
+        uname[0], uname[-2]))
+
+    # instantiate the Jira object
     jira = Jira(
         'https://{}/rest/api/3'.format(config['jira']['address']),
         config['jira']['api_username'],
@@ -84,13 +89,13 @@ def cli(configfile, verbose, observed_since, run_every):
 
     # If we are expected to continually re-run the transformer, then we will
     # need to track the passage of time and run every X hours, where X is
-    # defined by the user.
-    if run_every and run_every > 0:
+    # defined by the user in the configuration.
+    if config.get('service', {}).get('interval', 0) > 0:
+        sleeper = int(config['service']['interval']) * 3600
         while True:
-            sleeper = run_every * 3600
             last_run = int(time.time())
             logging.info(
-                'Sleeping for {}s before next iteration'.format(sleeper))
+                'Sleeping for {}h before next iteration'.format(sleeper/3600))
             time.sleep(sleeper)
             logging.info(
                 'Initiating ingest with observed_since={}'.format(last_run))

@@ -68,6 +68,9 @@ jira:
   api_token: 11111scPw10lX2WvDoj00000
   api_username: username@company.com
   address: company.atlassian.net
+
+project:
+  leadAccountId: 554433:00112233-ffee-aabb-aabb-998877665544
 ```
 
 [configfile]: example_config_file.yaml
@@ -84,39 +87,27 @@ Usage: tenable-jira [OPTIONS] [CONFIGFILE]
   Tenable.io -> Jira Cloud Transformer & Ingester
 
 Options:
-  -v, --verbose                 Logging Verbosity
   -s, --observed-since INTEGER  The unix timestamp of the age threshold
-  -r, --run-every INTEGER       How many hours between recurring imports
   --help                        Show this message and exit.
 ```
 
 Further the following environment variables can be used:
 
 ```
-VERBOSITY           Logging Verbosity.
-                        0 - WARNING
-                        1 - INFO
-                        2 - DEBUG
 SINCE               The observed-since option.
 RUN_EVERY           The run-every option.
 ```
 
 ## Example Usage
 
-Run once and transform everything from all time:
+Basic Run:
 
 ```
 tenable-jira config.yaml
 ```
 
-Run once and only import findings that have been seen since yesterday:
+Run and only import findings that have been seen since yesterday:
 
 ```
 tenable-jira -s $(date -v-1d +%s) config.yaml
-```
-
-Run the import every 24 hours
-
-```
-tenable-jira -r 24 config.yaml
 ```
