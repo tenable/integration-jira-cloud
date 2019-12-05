@@ -113,4 +113,4 @@ tenable-jira -s $(date -v-1d +%s) config.yaml
 
 ## Changelog
 
-[View the Changelog][CHANGELOG.md].
+[View the Changelog](CHANGELOG.md).
