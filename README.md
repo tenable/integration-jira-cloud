@@ -5,7 +5,8 @@ generate Jira Tasks and sub-tasks based on the vulnerabilities' current state.
 Vulnerabilities are automatically closed once the state of the vulnerability is
 marked as "fixed" in Tenable.io.
 
-* The integration creates a _**Vulnerability Management**_ project,  with the
+* The integration creates a _**Vulnerability Management**_ project using the
+  project key of _**VULN**_.  THe integration will then create the
   the appropriate custom fields, and links them to the associated screen to
   store and display all of the necessary information.
 * The integration creates a _**Task**_ for each Vulnerability and creates each
