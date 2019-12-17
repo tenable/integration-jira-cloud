@@ -32,7 +32,7 @@ class Tio2Jira:
         '''
         if not ('no_create' in self.config['screen']):
             sids = list()
-            if 'jira_id' not in self.config['screen']:
+            if 'jira_ids' not in self.config['screen']:
                 # if there was no screen ID specified, then we will attempt to
                 # discover it by the default naming convention that Jira uses
                 # to create the screens.  This format has been observed as:
@@ -42,13 +42,13 @@ class Tio2Jira:
                 for name in self.config['screen']['name']:
                     names.append('{}: {}'.format(
                         self.config['project']['key'], name))
-                for item in self._jira.screens.list()['values']:
+                for item in self._jira.screens.list():
                     if item['name'] in names:
                         sids.append(item['id'])
             else:
                 # if a jira_id was specified for the screen, then ignore the
                 # above shenanigans and just use the ID.
-                sids = self.config['screen']['jira_id']
+                sids = self.config['screen']['jira_ids']
 
             for sid in sids:
                 tabs = self._jira.screens.screen_tabs(sid)
