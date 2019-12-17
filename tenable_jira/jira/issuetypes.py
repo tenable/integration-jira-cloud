@@ -18,7 +18,7 @@ class IssueTypesAPI(APIEndpoint):
         for issuetype in issuetypes:
             for itype in itypes:
                 if (itype['name'] == issuetype['name']
-                  or itype['id'] == issuetype.get('jira_id')):
+                  and issuetype.get('jira_id') == None):
                     issuetype['jira_id'] = itype['id']
 
         for issuetype in issuetypes:
