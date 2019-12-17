@@ -2,10 +2,11 @@ from restfly.endpoint import APIEndpoint
 from restfly.iterator import APIIterator
 
 class ScreenIterator(APIIterator):
-    limit = 1000
+    limit = 100
     def _get_page(self):
+        print(self.num_pages)
         resp = self._api.get('screens', params={
-            'startAt': self.limit * self.num_pages - 1,
+            'startAt': self.limit * (self.num_pages - 1),
             'maxResults': self.limit
         }).json()
         self.total = resp['total']
