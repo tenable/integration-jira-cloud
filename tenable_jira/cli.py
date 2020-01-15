@@ -33,8 +33,9 @@ from . import __version__
 @click.command()
 @click.option('--observed-since', '-s', envvar='SINCE', default=0,
     type=click.INT, help='The unix timestamp of the age threshold')
+@click.option('--setup-only', is_flag=True)
 @click.argument('configfile', default='config.yaml', type=click.File('r'))
-def cli(configfile, observed_since):
+def cli(configfile, observed_since, setup_only=False):
     '''
     Tenable.io -> Jira Cloud Transformer & Ingester
     '''
@@ -55,6 +56,7 @@ def cli(configfile, observed_since):
 
     # Output some basic information detailing the config file used and the
     # python version & system arch.
+    logging.info('Tenable2JiraCloud Version {}'.format(__version__))
     logging.info('Using configuration file {}'.format(configfile.name))
     uname = platform.uname()
     logging.info('Running on Python {} {}/{}'.format(
@@ -85,18 +87,21 @@ def cli(configfile, observed_since):
         logging.error('No valid Tenable platform configuration defined.')
         exit(1)
     ingest = Tio2Jira(source, jira, config)
-    ingest.ingest(observed_since)
 
-    # If we are expected to continually re-run the transformer, then we will
-    # need to track the passage of time and run every X hours, where X is
-    # defined by the user in the configuration.
-    if config.get('service', {}).get('interval', 0) > 0:
-        sleeper = int(config['service']['interval']) * 3600
-        while True:
-            last_run = int(time.time())
-            logging.info(
-                'Sleeping for {}h before next iteration'.format(sleeper/3600))
-            time.sleep(sleeper)
-            logging.info(
-                'Initiating ingest with observed_since={}'.format(last_run))
-            ingest.ingest(last_run)
+    # only run the actual ingestion if the setup_only flag isn't flipped.
+    if not setup_only:
+        ingest.ingest(observed_since)
+
+        # If we are expected to continually re-run the transformer, then we will
+        # need to track the passage of time and run every X hours, where X is
+        # defined by the user in the configuration.
+        if config.get('service', {}).get('interval', 0) > 0:
+            sleeper = int(config['service']['interval']) * 3600
+            while True:
+                last_run = int(time.time())
+                logging.info(
+                    'Sleeping for {}h'.format(sleeper/3600))
+                time.sleep(sleeper)
+                logging.info(
+                    'Initiating ingest with observed_since={}'.format(last_run))
+                ingest.ingest(last_run)
