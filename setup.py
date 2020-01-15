@@ -9,7 +9,7 @@ https://github.com/tenable/integrations-jira-cloud
 
 setup(
     name='tenable-jira-cloud',
-    version='1.0.0',
+    version='1.0.1',
     description='Tenable -> Jira Cloud Bridge',
     author='Tenable, Inc.',
     long_description=long_description,
@@ -31,7 +31,8 @@ setup(
         'pytenable>=0.3.29',
         'restfly>=1.1.0',
         'arrow>=0.13.0',
-        'Click>=7.0'
+        'Click>=7.0',
+        'pyyaml>=5.1.2'
     ],
     entry_points={
         'console_scripts': [
