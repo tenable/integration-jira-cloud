@@ -1,7 +1,7 @@
 import yaml
 
 def base_config():
-    return yaml.load(config, Loader=yaml.CLoader)
+    return yaml.load(config, Loader=yaml.Loader)
 
 # WARNING: These are the default values that control how the transformer
 #          processes vulnerability data into Jira tickets.  While the code
@@ -27,10 +27,10 @@ tenable:
   secret_key:
 
   # The hostname for the Tenable.sc host
-  hostname:
+  sc_address:
 
   # The port number on Tenable.sc to connect to
-  port: 443
+  sc_port: 443
 
   # Note that Tenable.sc supports either session authentication or key
   # authentication.  You only need to provide one or the other.
@@ -114,6 +114,13 @@ issue_types:
       - Device IPv6
       - Vulnerability Port
       - Vulnerability Protocol
+
+
+# What transitions should be considered closed?
+closed_transitions:
+  - Closed
+  - Done
+  - Resolved
 
 
 # Jira issues have some predefined fields.  When leveraging those, we will want
