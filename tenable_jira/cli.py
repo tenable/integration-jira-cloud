@@ -41,7 +41,7 @@ def cli(configfile, observed_since, setup_only=False):
     '''
     config = dict_merge(
         base_config(),
-        yaml.load(configfile, Loader=yaml.CLoader)
+        yaml.load(configfile, Loader=yaml.Loader)
     )
 
     # Get the logging definition and define any defaults as need be.
