@@ -119,9 +119,20 @@ class Tio2Jira:
         '''
         Generates a basic subissue skeleton
         '''
+        platid = None
+        if isinstance(self._src, TenableSC):
+            platform = 'Tenable.sc'
+        elif isinstance(self._src, TenableIO):
+            platform = 'Tenable.io'
+        else:
+            platform = 'Unknown Tenable Platform'
+        for f in self._fields:
+            if f.get('is_platform_id'):
+                platid = f.get('jira_id')
         return {
             'project': {'key': self._project['key']},
             'issuetype': {'id': self.subtask['jira_id'] if self.subtask else None},
+            platid: platform,
         }
 
     def _gen_doc_format(self, vuln, fid, fdef):
@@ -208,15 +219,23 @@ class Tio2Jira:
                 # for labels, just pass on the field as-is
                 elif f['type'] in ['labels']:
                     if isinstance(value, str):
-                        processed = [value,]
+                        if fid == 'tsc_field':
+                            processed = value.split(',')
+                        else:
+                            processed = [value,]
                     else:
                         processed = value
 
                 # For datetime fields, validate that the field actually had
                 # a value and then convert it into the appropriate format.
                 elif f['type'] in ['datetime']:
-                    processed = arrow.get(value).format(
-                        'YYYY-MM-DDTHH:mm:ss.SSSZ')
+
+                    try:
+                        processed = arrow.get(value).format(
+                            'YYYY-MM-DDTHH:mm:ss.SSSZ')
+                    except arrow.parser.ParserError:
+                        processed = arrow.get(int(value)).format(
+                            'YYYY-MM-DDTHH:mm:ss.SSSZ')
 
                 # For anything else, just pass through
                 else:
@@ -269,7 +288,7 @@ class Tio2Jira:
         done = None
         transitions = self._jira.issues.get_transitions(issue['id'])
         for t in transitions['transitions']:
-            if t['name'] in ['Closed', 'Done', 'Resolved']:
+            if t['name'] in self.config['closed_transitions']:
                 done = t['id']
         if done:
             self._log.info('CLOSING {} {}'.format(
@@ -383,7 +402,7 @@ class Tio2Jira:
 
     def ingest(self, observed_since):
         '''
-        Perform the vuln ingestion and trnasformation.
+        Perform the vuln ingestion and transformation.
 
         Args:
             observed_since (int):
@@ -398,7 +417,7 @@ class Tio2Jira:
             vulns = self._src.exports.vulns(
                 last_found=observed_since,
                 severity=self.config['tenable']['tio_severities'],
-                num_assets=self.config['tenable'].get('tio_chunk_size', 1000))
+                num_assets=self.config['tenable'].get('chunk_size', 1000))
             self.create_issues(vulns)
 
             # generate a an export for the fixed vulns that match the
@@ -408,7 +427,7 @@ class Tio2Jira:
                 last_fixed=observed_since,
                 state=['fixed'],
                 severity=self.config['tenable']['tio_severities'],
-                num_assets=self.config['tenable'].get('tio_chunk_size', 1000))
+                num_assets=self.config['tenable'].get('chunk_size', 1000))
             self.close_issues(closed)
 
         # if the source instance is a Tenable.sc object, then we will make the
@@ -417,20 +436,20 @@ class Tio2Jira:
             # using the query specified, overload the tool and the last_seen
             # filter to pull data from the appropriate timeframe.
             vulns = self._src.analysis.vulns(
-                ('last_seen', '=', '{}-{}'.format(
+                ('lastSeen', '=', '{}-{}'.format(
                     observed_since, int(time.time()))),
-                query_id=self.config['tenable'].get('tsc_query_id'),
-                limit=self.config['tenable'].get('tsc_page_size', 1000),
+                query_id=self.config['tenable'].get('query_id'),
+                limit=self.config['tenable'].get('page_size', 1000),
                 tool='vulndetails')
             self.create_issues(vulns)
 
             # using the query specified, overload the tool and the last_seen
             # filter to pull data from the appropriate timeframe.
             vulns = self._src.analysis.vulns(
-                ('last_seen', '=', '{}-{}'.format(
+                ('lastMitigated', '=', '{}-{}'.format(
                     observed_since, int(time.time()))),
-                query_id=self.config['tenable'].get('tsc_query_id'),
-                limit=self.config['tenable'].get('tsc_page_size', 1000),
+                query_id=self.config['tenable'].get('query_id'),
+                limit=self.config['tenable'].get('page_size', 1000),
                 source='patched',
                 tool='vulndetails')
             self.close_issues(vulns)
