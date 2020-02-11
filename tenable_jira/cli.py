@@ -24,6 +24,7 @@ SOFTWARE.
 '''
 import click, logging, time, yaml, json, platform, sys
 from tenable.io import TenableIO
+from tenable.sc import TenableSC
 from .config import base_config
 from restfly.utils import dict_merge
 from .jira import Jira
@@ -81,8 +82,17 @@ def cli(configfile, observed_since, setup_only=False):
             build=__version__
         )
     elif config['tenable'].get('platform') == 'tenable.sc':
-        logging.error('Tenable.sc ingest is not yet implimented.')
-        exit(1)
+        source = TenableSC(
+            config['tenable'].get('address'),
+            port=int(config['tenable'].get('port', 443)),
+            username=config['tenable'].get('username'),
+            password=config['tenable'].get('password'),
+            access_key=config['tenable'].get('access_key'),
+            secret_key=config['tenable'].get('secret_key'),
+            vendor='Tenable',
+            product='JiraCloud',
+            build=__version__
+        )
     else:
         logging.error('No valid Tenable platform configuration defined.')
         exit(1)
@@ -105,3 +115,16 @@ def cli(configfile, observed_since, setup_only=False):
                 logging.info(
                     'Initiating ingest with observed_since={}'.format(last_run))
                 ingest.ingest(last_run)
+    else:
+        # In setup-only mode, the ingest will not run, and instead a config file
+        # will be generated that will have all of the JIRA identifiers baked in
+        # and will also inform the integration to ignore the screen builder.
+        # When using this config, if there are any changes to the code, then
+        # this config will need to be re-generated.
+        config['screen']['no_create'] = True
+        logging.info('Set to setup-only.  Will not run ingest.')
+        logging.info('The following is the updated config file from the setup.')
+        with open('generated_config.yaml', 'w') as outfile:
+            outfile.write(yaml.dump(config, Dumper=yaml.Dumper))
+        logging.info('Generated "generated_config.yaml" config file.')
+        logging.info('This config file should be updated for every new version of this integration.')
