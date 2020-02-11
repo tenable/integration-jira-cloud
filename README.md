@@ -41,6 +41,10 @@ marked as "fixed" in Tenable.io.
 
 * Tenable.io API Keys associated to an account with Admin privileges (required
   for the Vuln Export APIs).
+* Tenable.sc API Keys (or Username/Password) associated to an account with full
+  access to the vulnerability data.
+* For Tenable.sc, an Analysis Query ID that represents the query to run against
+  the vulnerability data.
 * Jira Cloud Basic Auth API Token and Username.  For automatic project creation
   and management, the account must be an Admin.
 * A host to run the script on.  This can be located anywhere as the integration
@@ -56,8 +60,8 @@ pip install tenable-jira-cloud
 
 In order to configure the integration, you need to provide the script a
 configuration file in the YAML format.  The [example config file][configfile]
-details the items required for the script to run.  A simple example looks like
-the following:
+details the items required for the script to run.  A simple Tenable.io example
+looks like the following:
 
 ```yaml
 tenable:
@@ -72,6 +76,45 @@ jira:
 project:
   leadAccountId: 554433:00112233-ffee-aabb-aabb-998877665544
 ```
+
+An example Tenable.sc example using API keys would look like:
+
+```yaml
+tenable:
+  platform: tenable.sc
+  address: tenablesc.company.tld
+  query_id: 406
+  access_key: 000001773236158ce8943c7369c12f98c092be2e1582b95ef86da5a6c3700000
+  secret_key: 111111773236158ce8943c7369c12f98c092be2e1582b95ef86da5a6c3711111
+
+jira:
+  api_token: 11111scPw10lX2WvDoj00000
+  api_username: username@company.com
+  address: company.atlassian.net
+
+project:
+  leadAccountId: 554433:00112233-ffee-aabb-aabb-998877665544
+```
+
+The same example using username/password would look like:
+
+```yaml
+tenable:
+  platform: tenable.sc
+  address: tenablesc.company.tld
+  query_id: 406
+  username: api_user
+  password: sekretsquirrel
+
+jira:
+  api_token: 11111scPw10lX2WvDoj00000
+  api_username: username@company.com
+  address: company.atlassian.net
+
+project:
+  leadAccountId: 554433:00112233-ffee-aabb-aabb-998877665544
+```
+
 
 [configfile]: example_config_file.yaml
 
@@ -88,6 +131,8 @@ Usage: tenable-jira [OPTIONS] [CONFIGFILE]
 
 Options:
   -s, --observed-since INTEGER  The unix timestamp of the age threshold
+  --setup-only                  Performs setup tasks and generates a config
+                                file.
   --help                        Show this message and exit.
 ```
 
@@ -110,6 +155,12 @@ Run and only import findings seen since yesterday:
 
 ```
 tenable-jira -s $(date -v-1d +%s) config.yaml
+```
+
+Generate a config file to sidestep setup & validation:
+
+```
+tenable-jira config.yaml --setup-only
 ```
 
 ## Changelog

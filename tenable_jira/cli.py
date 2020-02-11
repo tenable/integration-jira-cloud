@@ -34,7 +34,8 @@ from . import __version__
 @click.command()
 @click.option('--observed-since', '-s', envvar='SINCE', default=0,
     type=click.INT, help='The unix timestamp of the age threshold')
-@click.option('--setup-only', is_flag=True)
+@click.option('--setup-only', is_flag=True,
+    help='Performs setup tasks and generates a config file.')
 @click.argument('configfile', default='config.yaml', type=click.File('r'))
 def cli(configfile, observed_since, setup_only=False):
     '''
