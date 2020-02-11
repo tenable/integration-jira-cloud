@@ -27,10 +27,10 @@ tenable:
   secret_key:
 
   # The hostname for the Tenable.sc host
-  sc_address:
+  address:
 
   # The port number on Tenable.sc to connect to
-  sc_port: 443
+  port: 443
 
   # Note that Tenable.sc supports either session authentication or key
   # authentication.  You only need to provide one or the other.
@@ -47,13 +47,13 @@ tenable:
     - critical
 
   # Tenable.sc Query to use as the basis for generating JIRA tickets.
-  tsc_query_id:
+  query_id:
 
   # Number of assets per chunk to export from Tenable.io.
-  tio_chunk_size: 1000
+  chunk_size: 1000
 
   # Page size for Tenable.sc Analysis calls.
-  tsc_page_size: 1000
+  page_size: 1000
 
 
 jira:
@@ -146,21 +146,28 @@ issue_default_fields:
   summary:
     Task:
       tio_field: '[{vuln[plugin.id]}] {vuln[plugin.name]}'
+      tsc_field: '[{vuln[pluginID]}] {vuln[pluginName]}'
     Sub-task:
       tio_field: '[{vuln[asset.hostname]}/{vuln[port.port]}/{vuln[port.protocol]}] [{vuln[plugin.id]}] {vuln[plugin.name]}'
+      tsc_field: '[{vuln[ip]}/{vuln[port]}/{vuln[protocol]}] [{vuln[pluginID]}] {vuln[pluginName]}'
   description:
     Task:
       - name: Description
         tio_field: '{vuln[plugin.description]}'
+        tsc_field: '{vuln[description]}'
       - name: Solution
         tio_field: '{vuln[plugin.solution]}'
+        tsc_field: '{vuln[solution]}'
     Sub-task:
       - name: Description
         tio_field: '{vuln[plugin.description]}'
+        tsc_field: '{vuln[description]}'
       - name: Solution
         tio_field: '{vuln[plugin.solution]}'
+        tsc_field: '{vuln[solution]}'
       - name: Output
         tio_field: '{vuln[output]}'
+        tsc_field: '{vuln[pluginOutput]}'
 
 
 # Screen definition section
@@ -193,6 +200,7 @@ screen:
       - Vulnerability Protocol
     Asset:
       - Tenable Asset UUID
+      - Tenable Platform
       - Device Hostname
       - Device NetBIOS Name
       - Device DNS Name
@@ -201,7 +209,7 @@ screen:
       - Device MAC Addresses
       - Device Network ID
       - Vulnerability Repository ID
-
+      - Vulnerability Repository Name
 
 # The custom fields are created automatically if they do not exist.  Further the
 # mapping between the jira_field and the tio_field & tsc_field indicate what
@@ -218,6 +226,13 @@ fields:
 #     - TYPE2
 #   tio_field: field.name - Tenable.io field to parse for this JIRA field.
 #   tsc_field: field.name - Tenable.sc field to parse for this JIRA field.
+
+  - jira_field: Tenable Platform
+    type: readonlyfield
+    searcher: textsearcher
+    is_platform_id: true
+    issue_type:
+      - Sub-Task
 
   # Vulnerability fields
   - jira_field: CVEs

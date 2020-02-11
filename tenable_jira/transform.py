@@ -271,10 +271,18 @@ class Tio2Jira:
         for t in transitions['transitions']:
             if t['name'] in ['Closed', 'Done', 'Resolved']:
                 done = t['id']
-        self._log.info('CLOSING {} {}'.format(
-            issue['key'], issue['fields']['summary']))
-        self._jira.issues.transition(issue['id'],
-            transition={'id': done})
+        if done:
+            self._log.info('CLOSING {} {}'.format(
+                issue['key'], issue['fields']['summary']))
+            self._jira.issues.transition(issue['id'],
+                transition={'id': done})
+        else:
+            self._log.error(' '.join([
+                'CANNOT CLOSE {}.'.format(issue['id']),
+                'No valid transition found.',
+                'Available transitions are {}'.format(', '.join(
+                    ['{}:{}'.format(i['id'], i['name']) for i in transitions]))
+            ]))
 
     def _process_open_vuln(self, vuln, fid):
         '''
@@ -317,7 +325,7 @@ class Tio2Jira:
                 subs = p['fields']['subtasks']
                 perform_close = True
                 for s in [i['fields']['status']['name'] for i in subs]:
-                    if s not in ['Closed', 'Done', 'Resolved']:
+                    if s not in self.config['closed_transitions']:
                         perform_close = False
 
                 # If the perform_close flag is still True, then we will proceed
@@ -390,7 +398,7 @@ class Tio2Jira:
             vulns = self._src.exports.vulns(
                 last_found=observed_since,
                 severity=self.config['tenable']['tio_severities'],
-                num_assets=self.config['tenable']['tio_chunk_size'])
+                num_assets=self.config['tenable'].get('tio_chunk_size', 1000))
             self.create_issues(vulns)
 
             # generate a an export for the fixed vulns that match the
@@ -400,7 +408,7 @@ class Tio2Jira:
                 last_fixed=observed_since,
                 state=['fixed'],
                 severity=self.config['tenable']['tio_severities'],
-                num_assets=self.config['tenable']['tio_chunk_size'])
+                num_assets=self.config['tenable'].get('tio_chunk_size', 1000))
             self.close_issues(closed)
 
         # if the source instance is a Tenable.sc object, then we will make the
@@ -411,8 +419,8 @@ class Tio2Jira:
             vulns = self._src.analysis.vulns(
                 ('last_seen', '=', '{}-{}'.format(
                     observed_since, int(time.time()))),
-                query_id=self.config['tenable']['tsc_query_id'],
-                limit=self.config['tenable']['tsc_page_size'],
+                query_id=self.config['tenable'].get('tsc_query_id'),
+                limit=self.config['tenable'].get('tsc_page_size', 1000),
                 tool='vulndetails')
             self.create_issues(vulns)
 
@@ -421,8 +429,8 @@ class Tio2Jira:
             vulns = self._src.analysis.vulns(
                 ('last_seen', '=', '{}-{}'.format(
                     observed_since, int(time.time()))),
-                query_id=self.config['tenable']['tsc_query_id'],
-                limit=self.config['tenable']['tsc_page_size'],
+                query_id=self.config['tenable'].get('tsc_query_id'),
+                limit=self.config['tenable'].get('tsc_page_size', 1000),
                 source='patched',
                 tool='vulndetails')
             self.close_issues(vulns)
