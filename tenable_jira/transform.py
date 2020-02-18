@@ -296,10 +296,12 @@ class Tio2Jira:
         '''
         done = None
         transitions = self._jira.issues.get_transitions(issue['id'])
+
         for t in transitions['transitions']:
             if t['name'] in self.config['closed_transitions']:
                 done = t['id']
-        if done:
+                self._log.debug('Using transition {}'.format(t))
+        if done != None:
             self._log.info('CLOSING {} {}'.format(
                 issue['key'], issue['fields']['summary']))
             self._jira.issues.transition(issue['id'],
