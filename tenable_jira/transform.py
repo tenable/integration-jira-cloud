@@ -50,6 +50,8 @@ class Tio2Jira:
                 # above shenanigans and just use the ID.
                 sids = self.config['screen']['jira_ids']
 
+            self._log.info('Using JIRA Screens {}'.format(sids))
+
             for sid in sids:
                 tabs = self._jira.screens.screen_tabs(sid)
                 for tabname in self.config['screen']['tabs']:
@@ -85,8 +87,15 @@ class Tio2Jira:
                             if fieldname == f['jira_field']:
                                 tabnames = [t['name'] for t in tabfields]
                                 if fieldname not in tabnames:
+                                    self._log.info(
+                                        'Adding {} to Screen {}:{}'.format(
+                                            fieldname, sid, tid))
                                     self._jira.screens.add_screen_tab_field(
                                         sid, tid, f['jira_id'])
+                                else:
+                                    self._log.info(
+                                        '{} already exists in {}:{}'.format(
+                                            fieldname, sid, tid))
 
     @property
     def task(self):
