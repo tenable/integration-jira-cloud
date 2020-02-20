@@ -307,12 +307,11 @@ class Tio2Jira:
             self._jira.issues.transition(issue['id'],
                 transition={'id': done})
         else:
-            self._log.error(' '.join([
-                'CANNOT CLOSE {}.'.format(issue['id']),
-                'No valid transition found.',
-                'Available transitions are {}'.format(', '.join(
-                    ['{}:{}'.format(i['id'], i['name']) for i in transitions]))
-            ]))
+            self._log.error(
+                'CANNOT CLOSE {} as no valid transitions were found. {}'.format(
+                    str(issue['id']),
+                    json.dumps(transitions['transitions'])
+            ))
 
     def _process_open_vuln(self, vuln, fid):
         '''
