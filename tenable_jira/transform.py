@@ -1,6 +1,7 @@
 import logging, time, arrow, json
 from hashlib import md5
 from pkg_resources import resource_string as embedded
+from restfly.utils import trunc
 from .utils import flatten
 from tenable.io import TenableIO
 from tenable.sc import TenableSC
@@ -148,6 +149,7 @@ class Tio2Jira:
         '''
         Converts the YAML field definition into the processed result.
         '''
+        tconf = self.config.get('truncation', dict())
         # if the definition is a list, then we are dealing with a document
         # structure and should build the appropriate dict structure.
         if isinstance(fdef, list):
@@ -171,8 +173,13 @@ class Tio2Jira:
                         'type': 'paragraph',
                         'content': [{
                             'type': 'text',
-                            'text': item[fid].format(vuln=vuln)
-                    }]})
+                            'text': trunc(
+                                item[fid].format(vuln=vuln),
+                                tconf.get('limit', 10000),
+                                tconf.get('suffix', '...')
+                            )
+                        }]
+                    })
                 except KeyError:
                     content.append({
                         'type': 'paragraph',
