@@ -108,10 +108,11 @@ issue_types:
   - name: Sub-task
     type: subtask
     search:
+      - Tenable Platform
       - Tenable Plugin ID
       - Tenable Asset UUID
-      - Device IPv4
-      - Device IPv6
+      - Device IPv4 Addresses
+      - Device IPv6 Addresses
       - Vulnerability Port
       - Vulnerability Protocol
 
