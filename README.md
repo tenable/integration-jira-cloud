@@ -6,14 +6,14 @@ Vulnerabilities are automatically closed once the state of the vulnerability is
 marked as "fixed" in Tenable.io.
 
 * The integration creates a _**Vulnerability Management**_ project using the
-  project key _**VULN**_.  The integration then creates 
-  the appropriate custom fields and links them to the associated screen that
-  stores and displays all of the necessary information.
+  project key _**VULN**_.  The integration then creates the appropriate custom
+  fields and links them to the associated screen that stores and displays all
+  of the necessary information.
 * The integration creates a _**Task**_ for each Vulnerability and creates each
-  _vulnerability instance_ as a _**Sub-task**_.  Example: if you 
-  have 5 hosts with [plugin 151074][151074], the integration creates
-  1 Task with the details of [151074] and creates 5 Sub-tasks, each one
-  pointing to a specific instance of the vulnerability on a specific host.
+  _vulnerability instance_ as a _**Sub-task**_.  Example: if you have 5 hosts
+  with [plugin 151074][151074], the integration creates 1 Task with the details
+  of [151074] and creates 5 Sub-tasks, each one pointing to a specific instance
+  of the vulnerability on a specific host.
 * Vulnerability Instances (Sub-tasks) are closed automatically by the
   integration once the vulnerability is _**fixed**_ in Tenable.io.
 * Vulnerabilities (Tasks) are closed once all Sub-tasks enter a closed state.
@@ -35,10 +35,55 @@ marked as "fixed" in Tenable.io.
 [IP Address/Port Number/Protocol] [Plugin ID] Plugin Name
 ```
 
+* The integration will create the following fields into the Jira instance
+    * CVEs
+    * CVSSv2 Base Score
+    * CVSSv2 Temporal Score
+    * CVSSv3 Base Score
+    * CVSSv3 Temporal Score
+    * Device DNS Name
+    * Device IPv4 Addresses
+    * Device IPv6 Addresses
+    * Device Hostname
+    * Device MAC Addresses
+    * Device NetBIOS Name
+    * Device Network ID
+    * Tenable Asset UUID
+    * Tenable Platform
+    * Tenable Plugin Family
+    * Tenable Plugin ID
+    * Tenable Plugin Name
+    * Tenable VPR Score
+    * Vulnerability First Seen
+    * Vulnerability Last Seen
+    * Vulnerability Last Fixed
+    * Vulnerability State
+    * Vulnerability Port
+    * Vulnerability Protocol
+    * Vulnerability Repository ID
+    * Vulnerability Repository Name
+    * Vulnerability Severity
+
+* Vulnerability Definition (Task Issuetype) uniqueness is determined by the
+  following attributes:
+    * Tenable Plugin ID
+
+* Vulnerability Instance (Sub-Task Issuetype) uniqueness is determines by the
+  following attributes:
+    * Tenable Platform
+    * Tenable Plugin ID
+    * Tenable Asset UUID
+    * Device IPv4 Addresses
+    * Device IPv6 Addresses
+    * Vulnerability Port
+    * Vulnerability Protocol
+
+
 [151074]: https://www.tenable.com/plugins/nessus/131074
 
 ## Requirements
 
+* Python 3.6+ Installed (Versions less than 3.6 are untested and YMMV).
 * Tenable.io API Keys associated to an account with Admin privileges (required
   for the Vuln Export APIs).
 * Tenable.sc API Keys (or Username/Password) associated to an account with full
