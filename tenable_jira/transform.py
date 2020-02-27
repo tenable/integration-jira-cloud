@@ -125,11 +125,12 @@ class Tio2Jira:
             'issuetype': {'id': self.task['jira_id']},
         }
 
-    def _gen_subissue_skel(self):
+    def _get_platform(self):
         '''
-        Generates a basic subissue skeleton
+        Returns the custom field name and the platform.
         '''
         platid = None
+        platform = None
         if isinstance(self._src, TenableSC):
             platform = 'Tenable.sc'
         elif isinstance(self._src, TenableIO):
@@ -139,6 +140,13 @@ class Tio2Jira:
         for f in self._fields:
             if f.get('is_platform_id'):
                 platid = f.get('jira_id')
+        return platid, platform
+
+    def _gen_subissue_skel(self):
+        '''
+        Generates a basic subissue skeleton
+        '''
+        platid, platform = self._get_platform()
         return {
             'project': {'key': self._project['key']},
             'issuetype': {'id': self.subtask['jira_id'] if self.subtask else None},
@@ -224,6 +232,8 @@ class Tio2Jira:
                 oper = '~'
 
             value = vuln.get(f.get(fid))
+            if f.get('is_platform_id'):
+                _, value = self._get_platform()
             processed = None
 
             if value:
@@ -234,6 +244,7 @@ class Tio2Jira:
 
                 # for labels, just pass on the field as-is
                 elif f['type'] in ['labels']:
+                    self._log.debug('Label Detected.  Config={} value={}'.format(str(f), str(value)))
                     if isinstance(value, str):
                         if fid == 'tsc_field':
                             processed = value.split(',')
