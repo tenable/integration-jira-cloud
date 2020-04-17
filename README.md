@@ -23,8 +23,8 @@ marked as "fixed" in Tenable.io or Tenable.sc.
 * All data imports from Tenable.io use the last_found/last_seen fields.  This
   ensures that all issues are updated whenever new information becomes
   available.
-* For those that don't mind a bit more management of the script in exchange for 
-  less permissions, there is a **setup-only** mode that will create the project, 
+* For those that don't mind a bit more management of the script in exchange for
+  less permissions, there is a **setup-only** mode that will create the project,
   fields, and screens, then generate a full configuration file afterwards.
 * Task summaries are generated using the following formula:
 
@@ -100,8 +100,8 @@ marked as "fixed" in Tenable.io or Tenable.sc.
 
 ## Permissions
 
-* If using setup-only (as Admin) to let the script create all of the requirements, 
-  afterwards, it's been [reported][i28_perms] that the following permissions should 
+* If using setup-only (as Admin) to let the script create all of the requirements,
+  afterwards, it's been [reported][i28_perms] that the following permissions should
   yeild successful runs:
   * Assignable User
   * Assign Issues
@@ -116,7 +116,7 @@ marked as "fixed" in Tenable.io or Tenable.sc.
   * Schedule Issues
   * Set Issue Security
   * Transition Issues
- 
+
 [i28_perms]: https://github.com/tenable/integration-jira-cloud/issues/28#issuecomment-607386580
 
 ## Setup
