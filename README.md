@@ -1,9 +1,9 @@
-# Tenable.io for Jira Cloud
+# Tenable for Jira Cloud
 
 This integration is designed to pull Tenable.io vulnerability data, then
 generate Jira Tasks and sub-tasks based on the vulnerabilities' current state.
 Vulnerabilities are automatically closed once the state of the vulnerability is
-marked as "fixed" in Tenable.io.
+marked as "fixed" in Tenable.io or Tenable.sc.
 
 * The integration creates a _**Vulnerability Management**_ project using the
   project key _**VULN**_.  The integration then creates the appropriate custom
@@ -23,6 +23,9 @@ marked as "fixed" in Tenable.io.
 * All data imports from Tenable.io use the last_found/last_seen fields.  This
   ensures that all issues are updated whenever new information becomes
   available.
+* For those that don't mind a bit more management of the script in exchange for 
+  less permissions, there is a **setup-only** mode that will create the project, 
+  fields, and screens, then generate a full configuration file afterwards.
 * Task summaries are generated using the following formula:
 
 ```
@@ -94,6 +97,27 @@ marked as "fixed" in Tenable.io.
   and management, the account must have Admin privileges.
 * A host to run the script on.  This can be located anywhere as the integration
   is cloud-to-cloud.
+
+## Permissions
+
+* If using setup-only (as Admin) to let the script create all of the requirements, 
+  afterwards, it's been [reported][i28_perms] that the following permissions should 
+  yeild successful runs:
+  * Assignable User
+  * Assign Issues
+  * Close Issues
+  * Create Issues
+  * Delete Issues
+  * Edit Issues
+  * Link Issues
+  * Modify Reporter
+  * Move Issues
+  * Resolve Issues
+  * Schedule Issues
+  * Set Issue Security
+  * Transition Issues
+ 
+[i28_perms]: https://github.com/tenable/integration-jira-cloud/issues/28#issuecomment-607386580
 
 ## Setup
 
