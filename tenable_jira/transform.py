@@ -404,16 +404,22 @@ class Tio2Jira:
             v = flatten(vulnitem)
 
             # if the tio_ignore_accepted flag is set to True, then will will
-            # ignore the vulnerability, log the ignore, and move on.
+            # either ignore the vulnerability, or process the vulnerability as
+            # a closed vuln.
             if (self.config['tenable'].get('tio_ignore_accepted', False)
               and v.get('severity_modification_type', '').lower() == 'accepted'):
-                self._log.info(
-                    'Skipping {} on {} as it\'s an accepted risk'.format(
-                        v.get('plugin.id'), v.get('asset.uuid')))
-                continue
-
-            # send the vulnerability instance to processing.
-            self._process_open_vuln(v, fid)
+                if self.config['tenable'].get('tio_autoclose_accepted', False):
+                    self._log.info(
+                        'Autoclosing {} on {} as it\'s and accepted risk'.format(
+                            v.get('plugin.id'), v.get('asset.uuid')))
+                    self._process_closed_vuln(v, fid)
+                else:
+                    self._log.info(
+                        'Skipping {} on {} as it\'s an accepted risk'.format(
+                            v.get('plugin.id'), v.get('asset.uuid')))
+            else:
+                # send the vulnerability instance to processing.
+                self._process_open_vuln(v, fid)
 
     def close_issues(self, vulns):
         '''
