@@ -232,6 +232,18 @@ Generate a config file to sidestep setup & validation:
 tenable-jira config.yaml --setup-only
 ```
 
+## Common Problems
+
+JIRA Cloud's API doesn't have hard linkages between a projects, screens, and issuetypes.  While the integration generally seems to select the appropriate screens and issuetypes, sometimes for various reasons it will fail.  When this happens the integration will error in one of a couple of predictable ways.
+
+### Common issue 1: **Invalid Issuetypes**
+
+Refer to https://github.com/tenable/integration-jira-cloud/issues/18#issuecomment-594759198 and https://github.com/tenable/integration-jira-cloud/issues/23#issuecomment-604502293
+
+### Common issue 2: **No Screens selected**
+
+https://github.com/tenable/integration-jira-cloud/issues/23#issuecomment-604631753
+
 ## Changelog
 
 [View the Changelog](CHANGELOG.md).
