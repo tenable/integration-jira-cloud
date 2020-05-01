@@ -106,6 +106,8 @@ def cli(configfile, observed_since, setup_only=False, troubleshoot=False):
             product='JiraCloud',
             build=__version__
         )
+        if int(tio.sessions.details().get('permissions')) < 64:
+            logging.error('API Keys tie to non-admin user.')
     elif config['tenable'].get('platform') == 'tenable.sc':
         source = TenableSC(
             config['tenable'].get('address'),
