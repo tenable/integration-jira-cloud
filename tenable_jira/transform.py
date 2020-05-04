@@ -459,10 +459,15 @@ class Tio2Jira:
             # generate a an export for the open and reopened vulns that match
             # the criticality rating described.  Then pass the export iterator
             # to the create_issues method.
+            vpr = None
+            if self.config['tenable'].get('tio_vpr_thresh'):
+                vpr = {'gte': self.config['tenable'].get('tio_vpr_thresh')}
             vulns = self._src.exports.vulns(
                 last_found=observed_since,
                 severity=self.config['tenable']['tio_severities'],
-                num_assets=self.config['tenable'].get('chunk_size', 1000))
+                num_assets=self.config['tenable'].get('chunk_size', 1000),
+                vpr=vpr,
+            )
             self.create_issues(vulns)
 
             # generate a an export for the fixed vulns that match the
