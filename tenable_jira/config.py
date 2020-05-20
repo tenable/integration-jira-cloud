@@ -382,7 +382,7 @@ fields:
     searcher: datetimerange
     issue_type:
       - Sub-task
-    tio_field: first_seen
+    tio_field: first_found
     tsc_field: firstSeen
 
   - jira_field: Vulnerability Last Seen
@@ -390,7 +390,7 @@ fields:
     searcher: datetimerange
     issue_type:
       - Sub-task
-    tio_field: last_seen
+    tio_field: last_found
     tsc_field: lastSeen
 
   - jira_field: Vulnerability Last Fixed
