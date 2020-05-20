@@ -280,6 +280,15 @@ fields:
     tio_field: plugin.cvss3_temporal_score
     tsc_field: cvssV3TemporalScore
 
+  - jira_field: Patch Publication Date
+    type: readonlyfield
+    searcher: textsearcher
+    issuetype:
+      - Task
+      - Sub-task
+    tio_field: plugin.patch_publication_date
+    tsc_field: patchPubDate
+
   - jira_field: Tenable Plugin ID
     type: readonlyfield
     searcher: textsearcher
