@@ -349,6 +349,25 @@ class Tio2Jira:
             subissue['parent'] = {'key': i['key']}
             self._jira.issues.upsert(fields=subissue, jql=' and '.join(sjql))
 
+    def _close_parent(self, parent):
+        '''
+        Closes a parent task is all of the subtasks are in a closed state.
+        '''
+        # Here we will get the subtasks, and then iterate through their
+        # statuses to ensure that all of them are in a closed state.  If
+        # any of the issues are still open in any form, then we will
+        # flip the "perform_close" flag to False.
+        subs = parent['fields']['subtasks']
+        perform_close = True
+        for s in [i['fields']['status']['name'] for i in subs]:
+            if s not in self.config['closed_transitions']:
+                perform_close = False
+
+        # If the perform_close flag is still True, then we will proceed
+        # with closing the parent issue.
+        if perform_close:
+            self._close_issue(parent)
+
     def _process_closed_vuln(self, vuln, fid):
         '''
         Run through closing tasks and sub-tasks as necessary.
@@ -369,20 +388,7 @@ class Tio2Jira:
         parents = self._jira.issues.search(' and '.join(jql))
         if parents['total'] > 0:
             for p in parents['issues']:
-                # Here we will get the subtasks, and then iterate through their
-                # statuses to ensure that all of them are in a closed state.  If
-                # any of the issues are still open in any form, then we will
-                # flip the "perform_close" flag to False.
-                subs = p['fields']['subtasks']
-                perform_close = True
-                for s in [i['fields']['status']['name'] for i in subs]:
-                    if s not in self.config['closed_transitions']:
-                        perform_close = False
-
-                # If the perform_close flag is still True, then we will proceed
-                # with closing the parent issue.
-                if perform_close:
-                    self._close_issue(p)
+                self._close_parent(p)
 
     def create_issues(self, vulns):
         '''
