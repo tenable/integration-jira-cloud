@@ -199,6 +199,7 @@ screen:
       - Vulnerability State
       - Vulnerability Port
       - Vulnerability Protocol
+      - Patch Publication Date
     Asset:
       - Tenable Asset UUID
       - Tenable Asset Tags
@@ -284,7 +285,7 @@ fields:
   - jira_field: Patch Publication Date
     type: readonlyfield
     searcher: textsearcher
-    issuetype:
+    issue_type:
       - Task
       - Sub-task
     tio_field: plugin.patch_publication_date
@@ -338,7 +339,7 @@ fields:
     type: labels
     searcher: labelsearcher
     issue_type:
-        - Sub-task
+      - Sub-task
     is_tio_tags: true
 
   - jira_field: Device MAC Addresses
