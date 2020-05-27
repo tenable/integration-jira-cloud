@@ -201,6 +201,7 @@ screen:
       - Vulnerability Protocol
     Asset:
       - Tenable Asset UUID
+      - Tenable Asset Tags
       - Tenable Platform
       - Device Hostname
       - Device NetBIOS Name
@@ -332,6 +333,13 @@ fields:
     issue_type:
       - Sub-task
     tio_field: asset.uuid
+
+  - jira_field: Tenable Asset Tags
+    type: labels
+    searcher: labelsearcher
+    issue_type:
+        - Sub-task
+    is_tio_tags: true
 
   - jira_field: Device MAC Addresses
     type: readonlyfield

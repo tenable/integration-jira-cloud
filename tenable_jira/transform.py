@@ -9,6 +9,8 @@ from tenable.io.exports import ExportsIterator
 from tenable.sc.analysis import AnalysisResultsIterator
 
 class Tio2Jira:
+    _tag_cache = dict()
+
     def __init__(self, src, jira, config):
         # Create the logging facility
         self._jira = jira
@@ -234,6 +236,8 @@ class Tio2Jira:
             value = vuln.get(f.get(fid))
             if f.get('is_platform_id'):
                 _, value = self._get_platform()
+            if f.get('is_tio_tags') and fid == 'tio_field':
+                value = self._tag_cache.get(vuln.get('asset.uuid'))
             processed = None
 
             if value:
@@ -456,6 +460,45 @@ class Tio2Jira:
         # if the source instance is a Tenable.io object, then we will initiate
         # the appropriate export calls.
         if isinstance(self._src, TenableIO):
+
+            live = self._src.exports.assets(
+                updated_at=observed_since,
+                chunk_size=self.config['tenable'].get('chunk_size', 1000)
+            )
+
+            deleted = self._src.exports.assets(
+                deleted_at=observed_since,
+                chunk_size=self.config['tenable'].get('chunk_size', 1000)
+            )
+
+            terminated = self._src.exports.assets(
+                terminated_at=observed_since,
+                chunk_size=self.config['tenable'].get('chunk_size', 1000)
+            )
+
+            # In order to support tagging, we need to build a localized cache of
+            # the asset UUIDs and store a list of the unique tag pairs for each.
+            # In order to make this simple for Jira, we will be smashing the
+            # category and value together and storing the uniques.
+            for asset in live:
+                # if the asset doesn't exist in the tag cache, then we will
+                # create the entry and store an empty list.
+                if asset['id'] not in self._tag_cache:
+                    self._tag_cache[asset['id']] = list()
+
+                # iterate over the tags
+                for tag in asset['tags']:
+                    # Generate the tag name to use.
+                    tag_name = '{key}:{value}'.format(
+                        key=tag['key'],
+                        value=tag['value']
+                    )
+
+                    # If the tag name isn't in the cached list, then add it.
+                    if tag_name not in self._tag_cache[asset['id']]:
+                        self._tag_cache[asset['id']].append(tag_name)
+
+
             # generate a an export for the open and reopened vulns that match
             # the criticality rating described.  Then pass the export iterator
             # to the create_issues method.
