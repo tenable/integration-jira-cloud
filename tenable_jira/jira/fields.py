@@ -25,6 +25,7 @@ class FieldsAPI(APIEndpoint):
             for item in flist:
                 if item['name'] == field['jira_field']:
                     field['jira_id'] = item['id']
+                    self._log.info('{jira_field} is {jira_id} (existing)'.format(**field))
 
         # our next step is to iterate over the _field list and then create the
         # fields that are missing.
@@ -34,4 +35,5 @@ class FieldsAPI(APIEndpoint):
                     field_type=field['type'],
                     searcher=field['searcher'])
                 field['jira_id'] = resp['id']
+                self._log.info('{jira_field} is {jira_id} (new)'.format(**field))
         return fields
