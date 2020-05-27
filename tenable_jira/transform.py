@@ -529,6 +529,58 @@ class Tio2Jira:
                 num_assets=self.config['tenable'].get('chunk_size', 1000))
             self.close_issues(closed)
 
+            # Lastly we will iterate over the terminated and deleted assets and
+            # remove any issues related to those assets.  In order to do so, we
+            # will need to gather the correct field name and id from the config.
+            field = None
+            for f in self.config['fields']:
+                if (f.get('tio_field') == 'asset.uuid'
+                  and f.get('type') == 'labels'):
+                    field = (f.get('jira_id'), f.get('jira_field'))
+
+            # if we found the field data, then we will iterate through both the
+            # deleted and terminated assets and construct a JQL query to remove
+            # them.
+            if field:
+                assets = list()
+                for dataset in (terminated, deleted):
+                    for asset in dataset:
+                        assets.append(asset['id'])
+
+                # If any assets were terminated or deleted, we will then want to
+                # search for them and remove the issue tickets associated with
+                # them.
+                if len(assets) > 0:
+                    self._log.info(' '.join([
+                        'Discovered terminated or deleted assets.',
+                        'Attempting to clean up orphaned issues.'
+                    ]))
+                    jql = 'project = "{key}" AND "{name}" in ({tags})'.format(
+                        key=self._project['key'],
+                        name=field[1],
+                        tags=', '.join('"{}"'.format(i) for i in assets)
+                    )
+
+                    # We will keep calling the search API and working down the
+                    # issues until we have a total number of issues returned
+                    # equalling 0.
+                    resp = self._jira.issues.search(jql)
+                    while resp['total'] > 0:
+                        for issue in resp['issues']:
+                            # Close the issue, then check to see if a parent
+                            # issue is associated to the closed issue ticket.
+                            # if there is one, then close the parent if no open
+                            # child issues exist.
+                            self._close_issue(issue)
+                            pid = issue['fields'].get('parent', {}).get('id')
+                            if pid:
+                                parent = self._jira.issues.details(pid)
+                                self._close_parent(parent)
+
+                        # Recall the search for API to look for where we are in
+                        # the orphaned issues.
+                        resp = self._jira.issues.search(jql)
+
         # if the source instance is a Tenable.sc object, then we will make the
         # appropriate analysis calls using the query id specified.
         if isinstance(self._src, TenableSC):
