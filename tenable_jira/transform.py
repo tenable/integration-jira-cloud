@@ -10,6 +10,7 @@ from tenable.sc.analysis import AnalysisResultsIterator
 
 class Tio2Jira:
     _tag_cache = dict()
+    _termed_assets = list()
 
     def __init__(self, src, jira, config):
         # Create the logging facility
@@ -316,8 +317,13 @@ class Tio2Jira:
         '''
         Perform the close action for an issue.
         '''
+        cur_trans = issue['fields']['status']['name']
+        if cur_trans in self.config['closed_transitions']:
+            self._log.debug('skipping {}: already closed'.format(issue['key']))
+            return
+
         done = None
-        transitions = self._jira.issues.get_transitions(issue['id'])
+        transitions = self._jira.issues.get_transitions(issue['key'])
 
         for t in transitions['transitions']:
             if t['name'] in self.config['closed_transitions']:
@@ -329,11 +335,15 @@ class Tio2Jira:
             self._jira.issues.transition(issue['id'],
                 transition={'id': done})
         else:
-            self._log.error(
-                'CANNOT CLOSE {} as no valid transitions were found. {}'.format(
-                    str(issue['id']),
-                    json.dumps(transitions['transitions'])
-            ))
+            if 'Reopen' in [t['name'] for t in transitions['transitions']]:
+                self._log.info('{} is already in a CLOSED state'.format(
+                    str(issue['key'])))
+            else:
+                self._log.error(
+                    'CANNOT CLOSE {} as no transitions were found. {}'.format(
+                        str(issue['key']),
+                        json.dumps(transitions['transitions'])
+                ))
 
     def _process_open_vuln(self, vuln, fid):
         '''
@@ -410,18 +420,28 @@ class Tio2Jira:
                 'No IssueType defined for the vuln task {}.'.format(vulns))
 
         # start to process our way through the vulnerability iterator.
+        tconfig = self.config['tenable']
         for vulnitem in vulns:
             v = flatten(vulnitem)
 
             # if the tio_ignore_accepted flag is set to True, then will will
             # either ignore the vulnerability, or process the vulnerability as
             # a closed vuln.
-            if (self.config['tenable'].get('tio_ignore_accepted', False)
-              and v.get('severity_modification_type', '').lower() == 'accepted'):
-                if self.config['tenable'].get('tio_autoclose_accepted', False):
+            iaccept = tconfig.get('tio_ignore_accepted', False)
+            autoclose = tconfig.get('tio_autoclose_accepted', True)
+            tasset = v.get('asset.uuid', 'NA') in self._termed_assets
+            status = v.get(
+                'severity_modification_type', '').lower() == 'accepted'
+
+            if (((iaccept or autoclose) and status) or tasset):
+                if autoclose or tasset:
                     self._log.info(
-                        'Autoclosing {} on {} as it\'s and accepted risk'.format(
-                            v.get('plugin.id'), v.get('asset.uuid')))
+                        'Autoclosing {} on {} as it\'s an {} issue'.format(
+                            v.get('plugin.id'),
+                            v.get('asset.uuid'),
+                            'accepted' if status else 'orphaned'
+                        )
+                    )
                     self._process_closed_vuln(v, fid)
                 else:
                     self._log.info(
@@ -482,6 +502,23 @@ class Tio2Jira:
                 chunk_size=self.config['tenable'].get('chunk_size', 1000)
             )
 
+            # First we will iterate over the terminated and deleted assets and
+            # build a cache of assets to ignore.  In order to do so, we will
+            # need to gather the correct field name and id from the config.
+            field = None
+            for f in self.config['fields']:
+                if (f.get('tio_field') == 'asset.uuid'
+                  and f.get('type') == 'labels'):
+                    field = (f.get('jira_id'), f.get('jira_field'))
+
+            # if we found the field data, then we will iterate through both the
+            # deleted and terminated assets and construct a JQL query to remove
+            # them.
+            if field:
+                for dataset in (terminated, deleted):
+                    for asset in dataset:
+                        self._termed_assets.append(asset['id'])
+
             # In order to support tagging, we need to build a localized cache of
             # the asset UUIDs and store a list of the unique tag pairs for each.
             # In order to make this simple for Jira, we will be smashing the
@@ -529,57 +566,46 @@ class Tio2Jira:
                 num_assets=self.config['tenable'].get('chunk_size', 1000))
             self.close_issues(closed)
 
-            # Lastly we will iterate over the terminated and deleted assets and
-            # remove any issues related to those assets.  In order to do so, we
-            # will need to gather the correct field name and id from the config.
-            field = None
-            for f in self.config['fields']:
-                if (f.get('tio_field') == 'asset.uuid'
-                  and f.get('type') == 'labels'):
-                    field = (f.get('jira_id'), f.get('jira_field'))
-
-            # if we found the field data, then we will iterate through both the
-            # deleted and terminated assets and construct a JQL query to remove
+            # If any assets were terminated or deleted, we will then want to
+            # search for them and remove the issue tickets associated with
             # them.
-            if field:
-                assets = list()
-                for dataset in (terminated, deleted):
-                    for asset in dataset:
-                        assets.append(asset['id'])
-
-                # If any assets were terminated or deleted, we will then want to
-                # search for them and remove the issue tickets associated with
-                # them.
-                if len(assets) > 0:
-                    self._log.info(' '.join([
-                        'Discovered terminated or deleted assets.',
-                        'Attempting to clean up orphaned issues.'
-                    ]))
-                    jql = 'project = "{key}" AND "{name}" in ({tags})'.format(
+            if len(self._termed_assets) > 0:
+                self._log.info(' '.join([
+                    'Discovered terminated or deleted assets.',
+                    'Attempting to clean up orphaned issues.'
+                ]))
+                jql = ' '.join([
+                    'project = "{key}" AND "{name}" in ({tags})'.format(
                         key=self._project['key'],
                         name=field[1],
-                        tags=', '.join('"{}"'.format(i) for i in assets)
-                    )
+                        tags=', '.join(['"{}"'.format(i)
+                            for i in self._termed_assets])),
+                    'AND status not in (Closed, Done, Resolved)'
+                ])
 
-                    # We will keep calling the search API and working down the
-                    # issues until we have a total number of issues returned
-                    # equalling 0.
+                # We will keep calling the search API and working down the
+                # issues until we have a total number of issues returned
+                # equalling 0.
+                resp = self._jira.issues.search(jql)
+                while resp['total'] > 0:
+                    self._log.info('Autoclosing {} of {} issues.'.format(
+                        resp['maxResults'],
+                        resp['total']
+                        ))
+                    for issue in resp['issues']:
+                        # Close the issue, then check to see if a parent
+                        # issue is associated to the closed issue ticket.
+                        # if there is one, then close the parent if no open
+                        # child issues exist.
+                        self._close_issue(issue)
+                        pid = issue['fields'].get('parent', {}).get('key')
+                        if pid:
+                            parent = self._jira.issues.details(pid)
+                            self._close_parent(parent)
+
+                    # Recall the search for API to look for where we are in
+                    # the orphaned issues.
                     resp = self._jira.issues.search(jql)
-                    while resp['total'] > 0:
-                        for issue in resp['issues']:
-                            # Close the issue, then check to see if a parent
-                            # issue is associated to the closed issue ticket.
-                            # if there is one, then close the parent if no open
-                            # child issues exist.
-                            self._close_issue(issue)
-                            pid = issue['fields'].get('parent', {}).get('id')
-                            if pid:
-                                parent = self._jira.issues.details(pid)
-                                self._close_parent(parent)
-
-                        # Recall the search for API to look for where we are in
-                        # the orphaned issues.
-                        resp = self._jira.issues.search(jql)
 
         # if the source instance is a Tenable.sc object, then we will make the
         # appropriate analysis calls using the query id specified.
