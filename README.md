@@ -122,7 +122,7 @@ marked as "fixed" in Tenable.io or Tenable.sc.
 
 # Quickstart
 
-for detailed instrustions, please refer to the [wiki](https://github.com/tenable/integration-jira-cloud/wiki).
+for detailed instructions, please refer to the [wiki](https://github.com/tenable/integration-jira-cloud/wiki).
 
 ## Setup
 
