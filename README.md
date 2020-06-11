@@ -119,6 +119,11 @@ marked as "fixed" in Tenable.io or Tenable.sc.
 
 [i28_perms]: https://github.com/tenable/integration-jira-cloud/issues/28#issuecomment-607386580
 
+
+# Quickstart
+
+for detailed instructions, please refer to the [wiki](https://github.com/tenable/integration-jira-cloud/wiki).
+
 ## Setup
 
 ```
