@@ -483,13 +483,17 @@ class Tio2Jira:
             observed_since (int):
                 Unix Timestamp detailing the threshold for vuln age.
         '''
+        tags = list()
+        for tag in self.config['tenable'].get('tio_tags', list()):
+            tags.append((tag['key'], tag['value']))
         # if the source instance is a Tenable.io object, then we will initiate
         # the appropriate export calls.
         if isinstance(self._src, TenableIO):
 
             live = self._src.exports.assets(
                 updated_at=observed_since,
-                chunk_size=self.config['tenable'].get('chunk_size', 1000)
+                chunk_size=self.config['tenable'].get('chunk_size', 1000),
+                tags=tags
             )
 
             deleted = self._src.exports.assets(
@@ -553,6 +557,7 @@ class Tio2Jira:
                 severity=self.config['tenable']['tio_severities'],
                 num_assets=self.config['tenable'].get('chunk_size', 1000),
                 vpr=vpr,
+                tags=tags
             )
             self.create_issues(vulns)
 
