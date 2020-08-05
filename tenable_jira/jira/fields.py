@@ -22,10 +22,15 @@ class FieldsAPI(APIEndpoint):
         # with the name that we expect, and then splice in the id to sub-docs.
         flist = self.list()
         for field in fields:
+            f_set = False
             for item in flist:
-                if item['name'] == field['jira_field']:
+                if item['name'] == field['jira_field'] and not f_set:
                     field['jira_id'] = item['id']
+                    f_set = True
                     self._log.info('{jira_field} is {jira_id} (existing)'.format(**field))
+                if f_set:
+                    break
+
 
         # our next step is to iterate over the _field list and then create the
         # fields that are missing.
