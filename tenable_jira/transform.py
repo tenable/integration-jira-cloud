@@ -1,7 +1,8 @@
-import logging, time, arrow, json
+import logging, time, arrow, json, sys
 from hashlib import md5
 from pkg_resources import resource_string as embedded
 from restfly.utils import trunc
+from restfly.errors import BadRequestError
 from .utils import flatten
 from tenable.io import TenableIO
 from tenable.sc import TenableSC
@@ -126,6 +127,7 @@ class Tio2Jira:
         return {
             'project': {'key': self._project['key']},
             'issuetype': {'id': self.task['jira_id']},
+            'test': False
         }
 
     def _get_platform(self):
@@ -353,11 +355,21 @@ class Tio2Jira:
         issue, subissue, jql, sjql = self._process_vuln(vuln, fid)
 
         # perform the upsert of the issue and store the response as i.
-        i = self._jira.issues.upsert(fields=issue, jql=' and '.join(jql))
+        try:
+            i = self._jira.issues.upsert(fields=issue, jql=' and '.join(jql))
+        except BadRequestError as err:
+            if not self.config['jira'].get('ignore_errors', False):
+                sys.exit(2)
+            else:
+                return
 
         if self.subtask:
             subissue['parent'] = {'key': i['key']}
-            self._jira.issues.upsert(fields=subissue, jql=' and '.join(sjql))
+            try:
+                self._jira.issues.upsert(fields=subissue, jql=' and '.join(sjql))
+            except BadRequestError as err:
+                if not self.config['jira'].get('ignore_errors', False):
+                    sys.exit(2)
 
     def _close_parent(self, parent):
         '''
