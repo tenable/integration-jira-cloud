@@ -88,7 +88,7 @@ marked as "fixed" in Tenable.io or Tenable.sc.
 
 * Python 3.6+ Installed (Versions less than 3.6 are untested and YMMV).
 * Tenable.io API Keys associated to an account with Admin privileges (required
-  for the Vuln Export APIs).
+  for the Vuln Export APIs) and is associated to the "All Access" access group.
 * Tenable.sc API Keys (or Username/Password) associated to an account with full
   access to the vulnerability data.
 * For Tenable.sc, an Analysis Query ID that represents the query to run against
