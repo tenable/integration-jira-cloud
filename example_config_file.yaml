@@ -32,10 +32,10 @@ log:
   # then specify the filename here:
   filename: /path/to/logfile.log
 
-  # The following section is optional.  You should only specify this section if
-  # you would like the bridge to run as a service with it's own timer.
-  service:
-    # How many hours should we wait between jobs?  Note setting this to a
-    # non-zero number will result in imports past the initial import will use
-    # time of the last completed import as the basis for last observed.
-    interval: 24
+# The following section is optional.  You should only specify this section if
+# you would like the bridge to run as a service with it's own timer.
+service:
+  # How many hours should we wait between jobs?  Note setting this to a
+  # non-zero number will result in imports past the initial import will use
+  # time of the last completed import as the basis for last observed.
+  interval: 24

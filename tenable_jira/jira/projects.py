@@ -31,4 +31,5 @@ class ProjectsAPI(APIEndpoint):
         try:
             return self.details(kwargs['key'])
         except NotFoundError as err:
+            self._log.info('Creating Project {key}'.format(**kwargs))
             return self.create(**kwargs)

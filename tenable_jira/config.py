@@ -1,7 +1,7 @@
 import yaml
 
 def base_config():
-    return yaml.load(config, Loader=yaml.CLoader)
+    return yaml.load(config, Loader=yaml.Loader)
 
 # WARNING: These are the default values that control how the transformer
 #          processes vulnerability data into Jira tickets.  While the code
@@ -27,7 +27,7 @@ tenable:
   secret_key:
 
   # The hostname for the Tenable.sc host
-  hostname:
+  address:
 
   # The port number on Tenable.sc to connect to
   port: 443
@@ -47,13 +47,13 @@ tenable:
     - critical
 
   # Tenable.sc Query to use as the basis for generating JIRA tickets.
-  tsc_query_id:
+  query_id:
 
   # Number of assets per chunk to export from Tenable.io.
-  tio_chunk_size: 1000
+  chunk_size: 1000
 
   # Page size for Tenable.sc Analysis calls.
-  tsc_page_size: 1000
+  page_size: 1000
 
 
 jira:
@@ -108,12 +108,20 @@ issue_types:
   - name: Sub-task
     type: subtask
     search:
+      - Tenable Platform
       - Tenable Plugin ID
       - Tenable Asset UUID
-      - Device IPv4
-      - Device IPv6
+      - Device IPv4 Addresses
+      - Device IPv6 Addresses
       - Vulnerability Port
       - Vulnerability Protocol
+
+
+# What transitions should be considered closed?
+closed_transitions:
+  - Closed
+  - Done
+  - Resolved
 
 
 # Jira issues have some predefined fields.  When leveraging those, we will want
@@ -139,21 +147,28 @@ issue_default_fields:
   summary:
     Task:
       tio_field: '[{vuln[plugin.id]}] {vuln[plugin.name]}'
+      tsc_field: '[{vuln[pluginID]}] {vuln[pluginName]}'
     Sub-task:
       tio_field: '[{vuln[asset.hostname]}/{vuln[port.port]}/{vuln[port.protocol]}] [{vuln[plugin.id]}] {vuln[plugin.name]}'
+      tsc_field: '[{vuln[ip]}/{vuln[port]}/{vuln[protocol]}] [{vuln[pluginID]}] {vuln[pluginName]}'
   description:
     Task:
       - name: Description
         tio_field: '{vuln[plugin.description]}'
+        tsc_field: '{vuln[description]}'
       - name: Solution
         tio_field: '{vuln[plugin.solution]}'
+        tsc_field: '{vuln[solution]}'
     Sub-task:
       - name: Description
         tio_field: '{vuln[plugin.description]}'
+        tsc_field: '{vuln[description]}'
       - name: Solution
         tio_field: '{vuln[plugin.solution]}'
+        tsc_field: '{vuln[solution]}'
       - name: Output
         tio_field: '{vuln[output]}'
+        tsc_field: '{vuln[pluginOutput]}'
 
 
 # Screen definition section
@@ -184,8 +199,11 @@ screen:
       - Vulnerability State
       - Vulnerability Port
       - Vulnerability Protocol
+      - Patch Publication Date
     Asset:
       - Tenable Asset UUID
+      - Tenable Asset Tags
+      - Tenable Platform
       - Device Hostname
       - Device NetBIOS Name
       - Device DNS Name
@@ -194,7 +212,7 @@ screen:
       - Device MAC Addresses
       - Device Network ID
       - Vulnerability Repository ID
-
+      - Vulnerability Repository Name
 
 # The custom fields are created automatically if they do not exist.  Further the
 # mapping between the jira_field and the tio_field & tsc_field indicate what
@@ -211,6 +229,13 @@ fields:
 #     - TYPE2
 #   tio_field: field.name - Tenable.io field to parse for this JIRA field.
 #   tsc_field: field.name - Tenable.sc field to parse for this JIRA field.
+
+  - jira_field: Tenable Platform
+    type: readonlyfield
+    searcher: textsearcher
+    is_platform_id: true
+    issue_type:
+      - Sub-Task
 
   # Vulnerability fields
   - jira_field: CVEs
@@ -257,6 +282,15 @@ fields:
     tio_field: plugin.cvss3_temporal_score
     tsc_field: cvssV3TemporalScore
 
+  - jira_field: Patch Publication Date
+    type: readonlyfield
+    searcher: textsearcher
+    issue_type:
+      - Task
+      - Sub-task
+    tio_field: plugin.patch_publication_date
+    tsc_field: patchPubDate
+
   - jira_field: Tenable Plugin ID
     type: readonlyfield
     searcher: textsearcher
@@ -300,6 +334,13 @@ fields:
     issue_type:
       - Sub-task
     tio_field: asset.uuid
+
+  - jira_field: Tenable Asset Tags
+    type: labels
+    searcher: labelsearcher
+    issue_type:
+      - Sub-task
+    is_tio_tags: true
 
   - jira_field: Device MAC Addresses
     type: readonlyfield
@@ -359,7 +400,7 @@ fields:
     searcher: datetimerange
     issue_type:
       - Sub-task
-    tio_field: first_seen
+    tio_field: first_found
     tsc_field: firstSeen
 
   - jira_field: Vulnerability Last Seen
@@ -367,7 +408,7 @@ fields:
     searcher: datetimerange
     issue_type:
       - Sub-task
-    tio_field: last_seen
+    tio_field: last_found
     tsc_field: lastSeen
 
   - jira_field: Vulnerability Last Fixed

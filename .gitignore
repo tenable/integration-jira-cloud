@@ -4,3 +4,7 @@
 *.egg-info
 __pycache__
 /config.yaml
+/generated_config.yaml
+dist
+/issue_debug.md
+.DS_Store
