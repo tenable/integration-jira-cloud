@@ -127,7 +127,6 @@ class Tio2Jira:
         return {
             'project': {'key': self._project['key']},
             'issuetype': {'id': self.task['jira_id']},
-            'test': False
         }
 
     def _get_platform(self):
