@@ -217,6 +217,27 @@ SINCE               The observed-since option.
 RUN_EVERY           The run-every option.
 ```
 
+
+By default, the integration will only create jira tickets for CRITICAL and HIGH tenable findings only.
+To create jira tickets for MEDIUM and LOW severity findings as well, update the config.yaml file to add the `tio_severities`  to the tenable section, as shown here:
+
+```yaml
+tenable:
+  access_key: 000001773236158ce8943c7369c12f98c092be2e1582b95ef86da5a6c3700000
+  secret_key: 111111773236158ce8943c7369c12f98c092be2e1582b95ef86da5a6c3711111
+  
+  tio_severities:
+    - critical
+    - high
+    - medium
+    - low
+
+...
+```
+
+
+
+
 ## Example Usage
 
 Basic Run:
