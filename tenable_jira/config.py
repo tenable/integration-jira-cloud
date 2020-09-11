@@ -340,7 +340,7 @@ fields:
     searcher: labelsearcher
     issue_type:
       - Sub-task
-    is_tio_tags: true
+    tio_field: asset.tags
 
   - jira_field: Device MAC Addresses
     type: readonlyfield

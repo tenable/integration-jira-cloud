@@ -10,7 +10,7 @@ from tenable.io.exports import ExportsIterator
 from tenable.sc.analysis import AnalysisResultsIterator
 
 class Tio2Jira:
-    _tag_cache = dict()
+    _asset_cache = dict()
     _termed_assets = list()
 
     def __init__(self, src, jira, config):
@@ -239,7 +239,7 @@ class Tio2Jira:
             if f.get('is_platform_id'):
                 _, value = self._get_platform()
             if f.get('is_tio_tags') and fid == 'tio_field':
-                value = self._tag_cache.get(vuln.get('asset.uuid'))
+                value = vuln.get('asset.tags')
             processed = None
 
             if value:
@@ -433,6 +433,14 @@ class Tio2Jira:
         # start to process our way through the vulnerability iterator.
         tconfig = self.config['tenable']
         for vulnitem in vulns:
+            # If the vulnerability is from Tenable.io, then we will want to
+            # bolt on the asset attributes from the asset cache on to the vuln
+            # instance itself.
+            if fid == 'tio_field':
+                asset = self._asset_cache.get(
+                    vulnitem.get('asset', dict()).get('uuid'), dict())
+                for key in asset:
+                    vulnitem['asset'][key] = asset[key]
             v = flatten(vulnitem)
 
             # if the tio_ignore_accepted flag is set to True, then will will
@@ -483,6 +491,14 @@ class Tio2Jira:
 
         # start to process our way through the vulnerability iterator.
         for vulnitem in vulns:
+            # If the vulnerability is from Tenable.io, then we will want to
+            # bolt on the asset attributes from the asset cache on to the vuln
+            # instance itself.
+            if fid == 'tio_field':
+                asset = self._asset_cache.get(
+                    vulnitem.get('asset', dict()).get('uuid'), dict())
+                for key in asset:
+                    vulnitem['asset'][key] = asset[key]
             v = flatten(vulnitem)
             self._process_closed_vuln(v, fid)
 
@@ -541,8 +557,11 @@ class Tio2Jira:
             for asset in live:
                 # if the asset doesn't exist in the tag cache, then we will
                 # create the entry and store an empty list.
-                if asset['id'] not in self._tag_cache:
-                    self._tag_cache[asset['id']] = list()
+                if asset['id'] not in self._asset_cache:
+                    self._asset_cache[asset['id']] = dict(tags=list())
+
+                for a in self.config['tenable'].get('tio_asset_attr_cache', list()):
+                    self._asset_cache[asset['id']][a] = asset.get(a)
 
                 # iterate over the tags
                 for tag in asset['tags']:
@@ -553,8 +572,8 @@ class Tio2Jira:
                     )
 
                     # If the tag name isn't in the cached list, then add it.
-                    if tag_name not in self._tag_cache[asset['id']]:
-                        self._tag_cache[asset['id']].append(tag_name)
+                    if tag_name not in self._asset_cache[asset['id']]['tags']:
+                        self._asset_cache[asset['id']]['tags'].append(tag_name)
 
 
             # generate a an export for the open and reopened vulns that match

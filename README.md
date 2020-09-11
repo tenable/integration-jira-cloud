@@ -100,6 +100,12 @@ marked as "fixed" in Tenable.io or Tenable.sc.
 
 ## Permissions
 
+* The script requires **Site Admin** Access at least initially to create the
+  project, the custom fields, and link everything to the right screens.
+* The script requires Admin access to the project that it has created.
+  Depending on the permissions setup within your own Jira Cloud instance, this
+  may not be enough however.  If you are seeing errors, please refer to the
+  list of required permissions (below).
 * If using setup-only (as Admin) to let the script create all of the requirements,
   afterwards, it's been [reported][i28_perms] that the following permissions should
   yeild successful runs:
