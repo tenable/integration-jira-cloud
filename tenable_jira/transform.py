@@ -240,6 +240,12 @@ class Tio2Jira:
                 _, value = self._get_platform()
             if f.get('is_tio_tags') and fid == 'tio_field':
                 value = vuln.get('asset.tags')
+
+            # If severity matching is enabled, then we will ned to match up the
+            # priority to the severity rating.
+            sevprio = self.config['tenable'].get('severity_prioritization')
+            if f['jira_field'] == 'Vulnerability Severity' and sevprio:
+                issue['priority'] = {'id': str(sevprio[value.lower()])}
             processed = None
 
             if value:
@@ -250,7 +256,6 @@ class Tio2Jira:
 
                 # for labels, just pass on the field as-is
                 elif f['type'] in ['labels']:
-                    self._log.debug('Label Detected.  Config={} value={}'.format(str(f), str(value)))
                     if isinstance(value, str):
                         if fid == 'tsc_field':
                             processed = value.split(',')
