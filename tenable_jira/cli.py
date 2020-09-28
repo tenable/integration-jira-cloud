@@ -60,8 +60,12 @@ def cli(configfile, observed_since, setup_only=False, troubleshoot=False):
     '''
     Tenable.io -> Jira Cloud Transformer & Ingester
     '''
+    # Load the config, but ensure that any additional fields are additive to the
+    # basic field set.
     config_from_file = yaml.load(configfile, Loader=yaml.Loader)
+    fields = config_from_file.pop('custom_fields')
     config = dict_merge(base_config(), config_from_file)
+    config['fields'] = config['fields'] + fields
 
     # Get the logging definition and define any defaults as need be.
     log = config.get('log', {})
