@@ -442,10 +442,11 @@ class Tio2Jira:
             # bolt on the asset attributes from the asset cache on to the vuln
             # instance itself.
             if fid == 'tio_field':
+                keys = self.config['tenable'].get('tio_asset_attr_cache', list())
                 asset = self._asset_cache.get(
                     vulnitem.get('asset', dict()).get('uuid'), dict())
-                for key in asset:
-                    vulnitem['asset'][key] = asset[key]
+                for key in keys:
+                    vulnitem['asset'][key] = asset.get(key)
             v = flatten(vulnitem)
 
             # if the tio_ignore_accepted flag is set to True, then will will
@@ -500,10 +501,11 @@ class Tio2Jira:
             # bolt on the asset attributes from the asset cache on to the vuln
             # instance itself.
             if fid == 'tio_field':
+                keys = self.config['tenable'].get('tio_asset_attr_cache', list())
                 asset = self._asset_cache.get(
                     vulnitem.get('asset', dict()).get('uuid'), dict())
-                for key in asset:
-                    vulnitem['asset'][key] = asset[key]
+                for key in keys:
+                    vulnitem['asset'][key] = asset.get(key)
             v = flatten(vulnitem)
             self._process_closed_vuln(v, fid)
 
