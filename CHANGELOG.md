@@ -4,6 +4,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.16]
+### Fixed
+- If no custom fields are listed, then the script will fail.  set a default null list if unspecified.
+
+## [1.1.15]
+### Added
+- Added ability to pass custom field definitions from the config without overloading the existing ones (additive definitions)
+
+### Fixed
+- Always add all asset attributes to the vuln doc (open AND fixed).
+
+## [1.1.14]
+### Added
+- Added ability to merge asset data into vuln instance tickets
+- Added ability to set Jira priority based on severity.
+
+## [1.1.13]
+### Fixed
+- Removed accidental test value used for force a failure condition.
+
+## [1.1.12]
+### Added
+- Added ability to ignore Jira Cloud API errors via config setting.
+
+### Fixed
+- The Jira Field id should reliably return on the first match
+
+
+## [1.1.11]
+### Added
+- Asset tag support for Tenable.io
+
+
+## [1.1.10]
+### Added
+- Autoclosing of terminated and deleted assets
+- Additional debug reporting.
+
+### Changed
+- Closing methods are now more centralized.
+
+### Fixed
+- Patch publication wasn't a screen field.
+
+
 ## [1.1.9]
 ### Fixed
 - First Seen and Last Seen in Tenable.io is actually first_found and last_found #45
