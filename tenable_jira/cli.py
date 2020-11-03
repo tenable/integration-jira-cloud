@@ -67,6 +67,12 @@ def cli(configfile, observed_since, setup_only=False, troubleshoot=False):
     config = dict_merge(base_config(), config_from_file)
     config['fields'] = config['fields'] + fields
 
+    if config['tenable'].get('tio_transform_tags'):
+        attr_cache = config['tenable'].get('tio_asset_attr_cache', list())
+        tag_attrs = config['tenable'].get('tio_transform_tags', list())
+        config['tenable']['tio_asset_attr_cache'] = attr_cache + tag_attrs
+
+
     # Get the logging definition and define any defaults as need be.
     log = config.get('log', {})
     log_lvls = {'debug': 10, 'info': 20, 'warn': 30, 'error': 40}

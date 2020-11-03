@@ -248,6 +248,9 @@ class Tio2Jira:
                 issue['priority'] = {'id': str(sevprio[value.lower()])}
             processed = None
 
+            if f['jira_field'] == 'Network Tag':
+                self._log.debug(f'FOUND!!!! {f} {value}')
+
             if value:
                 # for text-type fields, only sent the field if there is some
                 # sort of data in it and recast the field as a string.
@@ -279,10 +282,16 @@ class Tio2Jira:
                 else:
                     processed = value
 
+                if f['jira_field'] == 'Network Tag':
+                    self._log.debug(f'FOUND-2!!!! {processed}')
+
                 if self.task['name'] in f['issue_type']:
                     issue[f['jira_id']] = processed
                 if self.subtask['name'] in f['issue_type']:
                     subissue[f['jira_id']] = processed
+
+                if f['jira_field'] == 'Network Tag':
+                    self._log.debug(f'FOUND-3!!!! {"customfield_10305" in subissue}')
 
             # Handle any JQL conversions that need to be done in order to make
             # the JQL statement valid.
@@ -447,7 +456,9 @@ class Tio2Jira:
                     vulnitem.get('asset', dict()).get('uuid'), dict())
                 for key in keys:
                     vulnitem['asset'][key] = asset.get(key)
+            self._log.debug(vulnitem['asset'])
             v = flatten(vulnitem)
+            self._log.debug(v['asset.Network'])
 
             # if the tio_ignore_accepted flag is set to True, then will will
             # either ignore the vulnerability, or process the vulnerability as
@@ -561,14 +572,16 @@ class Tio2Jira:
             # the asset UUIDs and store a list of the unique tag pairs for each.
             # In order to make this simple for Jira, we will be smashing the
             # category and value together and storing the uniques.
+            trans_list = self.config['tenable'].get('tio_transform_tags', list())
+            acache = self._asset_cache
             for asset in live:
                 # if the asset doesn't exist in the tag cache, then we will
                 # create the entry and store an empty list.
-                if asset['id'] not in self._asset_cache:
-                    self._asset_cache[asset['id']] = dict(tags=list())
+                if asset['id'] not in acache:
+                    acache[asset['id']] = dict(tags=list())
 
                 for a in self.config['tenable'].get('tio_asset_attr_cache', list()):
-                    self._asset_cache[asset['id']][a] = asset.get(a)
+                    acache[asset['id']][a] = asset.get(a)
 
                 # iterate over the tags
                 for tag in asset['tags']:
@@ -579,9 +592,14 @@ class Tio2Jira:
                     )
 
                     # If the tag name isn't in the cached list, then add it.
-                    if tag_name not in self._asset_cache[asset['id']]['tags']:
-                        self._asset_cache[asset['id']]['tags'].append(tag_name)
+                    if tag_name not in acache[asset['id']]['tags']:
+                        acache[asset['id']]['tags'].append(tag_name)
 
+                    # If the tag category is in the list of transformable tags,
+                    # we will then also convert it into a asset attribute for
+                    # use as a custom field.
+                    if tag['key'] in trans_list:
+                        acache[asset['id']][tag['key']] = tag['value']
 
             # generate a an export for the open and reopened vulns that match
             # the criticality rating described.  Then pass the export iterator
