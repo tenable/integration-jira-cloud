@@ -22,7 +22,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
-import click, logging, time, yaml, json, platform, sys, os
+import click, logging, time, yaml, json, platform, sys, os, arrow
 from tenable.io import TenableIO
 from tenable.sc import TenableSC
 from .config import base_config
@@ -103,6 +103,13 @@ def cli(configfile, observed_since, setup_only=False, troubleshoot=False):
     # Initiate the Tenable.io API model, the Ingester model, and start the
     # ingestion and data transformation.
     if config['tenable'].get('platform') == 'tenable.io':
+        if not observed_since:
+            # if no since field is supplied, then look in the config file to see
+            # if an age was applied, if not, then use the default of 30 days.
+            observed_since = arrow.now()\
+                .shift(days=-config['tenable'].get('tio_age', 30))\
+                .floor('day').timestamp
+
         source = TenableIO(
             access_key=config['tenable'].get('access_key'),
             secret_key=config['tenable'].get('secret_key'),

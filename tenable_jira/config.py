@@ -46,6 +46,9 @@ tenable:
     - high
     - critical
 
+  # How many days back should we go?
+  tio_age: 30
+
   # Tenable.sc Query to use as the basis for generating JIRA tickets.
   query_id:
 
