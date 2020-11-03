@@ -590,22 +590,26 @@ class Tio2Jira:
             if self.config['tenable'].get('tio_vpr_thresh'):
                 vpr = {'gte': self.config['tenable'].get('tio_vpr_thresh')}
             vulns = self._src.exports.vulns(
+                include_unlicensed=True,
                 last_found=observed_since,
                 severity=self.config['tenable']['tio_severities'],
                 num_assets=self.config['tenable'].get('chunk_size', 1000),
                 vpr=vpr,
                 tags=tags
             )
+            self._log.info('Updating and creating issues marked as Open')
             self.create_issues(vulns)
 
             # generate a an export for the fixed vulns that match the
             # criticality rating described.  Then pass the export iterator to
             # the close_issues method.
             closed = self._src.exports.vulns(
+                include_unlicensed=True,
                 last_fixed=observed_since,
                 state=['fixed'],
                 severity=self.config['tenable']['tio_severities'],
                 num_assets=self.config['tenable'].get('chunk_size', 1000))
+            self._log.info('Closing Issues Marked as Fixed.')
             self.close_issues(closed)
 
             # If any assets were terminated or deleted, we will then want to
