@@ -248,9 +248,6 @@ class Tio2Jira:
                 issue['priority'] = {'id': str(sevprio[value.lower()])}
             processed = None
 
-            if f['jira_field'] == 'Network Tag':
-                self._log.debug(f'FOUND!!!! {f} {value}')
-
             if value:
                 # for text-type fields, only sent the field if there is some
                 # sort of data in it and recast the field as a string.
@@ -282,16 +279,10 @@ class Tio2Jira:
                 else:
                     processed = value
 
-                if f['jira_field'] == 'Network Tag':
-                    self._log.debug(f'FOUND-2!!!! {processed}')
-
                 if self.task['name'] in f['issue_type']:
                     issue[f['jira_id']] = processed
                 if self.subtask['name'] in f['issue_type']:
                     subissue[f['jira_id']] = processed
-
-                if f['jira_field'] == 'Network Tag':
-                    self._log.debug(f'FOUND-3!!!! {"customfield_10305" in subissue}')
 
             # Handle any JQL conversions that need to be done in order to make
             # the JQL statement valid.
@@ -456,9 +447,7 @@ class Tio2Jira:
                     vulnitem.get('asset', dict()).get('uuid'), dict())
                 for key in keys:
                     vulnitem['asset'][key] = asset.get(key)
-            self._log.debug(vulnitem['asset'])
             v = flatten(vulnitem)
-            self._log.debug(v['asset.Network'])
 
             # if the tio_ignore_accepted flag is set to True, then will will
             # either ignore the vulnerability, or process the vulnerability as
