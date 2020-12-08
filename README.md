@@ -231,7 +231,7 @@ To create jira tickets for MEDIUM and LOW severity findings as well, update the 
 tenable:
   access_key: 000001773236158ce8943c7369c12f98c092be2e1582b95ef86da5a6c3700000
   secret_key: 111111773236158ce8943c7369c12f98c092be2e1582b95ef86da5a6c3711111
-  
+
   tio_severities:
     - critical
     - high
@@ -275,6 +275,12 @@ Refer to https://github.com/tenable/integration-jira-cloud/issues/18#issuecommen
 ### Common issue 2: **No Screens selected**
 
 https://github.com/tenable/integration-jira-cloud/issues/23#issuecomment-604631753
+
+## Support
+
+Tenable offers support for this integration on a best-effort basis.  Tenable asserts that the integration contained in this repository should work on a clean Jira environment. Tenable makes no guarantees that this integration will work without customization to the integration or your Jira environment.  If customization is required to get this integration working, we recommend that you reach out to Tenable's professional services team to assist with any modifications that may be required.
+
+If you would prefer that this integration be directly integrated into the Tenable platform, please reach out to your Customer Success Manager (CSM) about filing a feature request to get this functionality added to your platform.
 
 ## Changelog
 
