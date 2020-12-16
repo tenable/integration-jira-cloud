@@ -337,6 +337,7 @@ fields:
     issue_type:
       - Sub-task
     tio_field: asset.uuid
+    tsc_field: uuid
 
   - jira_field: Tenable Asset Tags
     type: labels

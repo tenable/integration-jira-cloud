@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Fixed
 
 - Asset Metadata merging was missing tagging data after changes made to support #74/#80
+- Tenable Asset UUID now populated with agent UUID when using Tenable.sc
 
 ### Added
 
