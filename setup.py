@@ -9,7 +9,7 @@ https://github.com/tenable/integrations-jira-cloud
 
 setup(
     name='tenable-jira-cloud',
-    version='1.1.17',
+    version='1.1.18',
     description='Tenable -> Jira Cloud Bridge',
     author='Tenable, Inc.',
     long_description=long_description,
@@ -24,6 +24,7 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
     ],
     keywords='tenable tenable_io ibm jira',
     packages=find_packages(exclude=['tests']),

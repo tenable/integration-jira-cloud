@@ -447,6 +447,7 @@ class Tio2Jira:
                     vulnitem.get('asset', dict()).get('uuid'), dict())
                 for key in keys:
                     vulnitem['asset'][key] = asset.get(key)
+                vulnitem['asset']['tags'] = asset.get('tags', list())
             v = flatten(vulnitem)
 
             # if the tio_ignore_accepted flag is set to True, then will will
