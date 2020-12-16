@@ -6,5 +6,6 @@ __pycache__
 /config.yaml
 /generated_config.yaml
 dist
-/issue_debug.md
+/issue*
 .DS_Store
+.nova
