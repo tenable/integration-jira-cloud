@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.18]
+
+## Fixed
+
+- Asset Metadata merging was missing tagging data after changes made to support #74/#80
+
+### Added
+
+- `dry_run` boolean param within the config to dump the raw vuln, generate issue, and generate sub-issue to help identify problems.  In this mode, no tickets are actually created within Jira.
+
 ## [1.1.17]
 
 ### Fixed

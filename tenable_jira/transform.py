@@ -357,6 +357,11 @@ class Tio2Jira:
         '''
         # Pass off the processing of the issue and subissue to _process_vuln
         issue, subissue, jql, sjql = self._process_vuln(vuln, fid)
+        if self.config.get('dry_run', False):
+            self._log.debug(f'VULN: {json.dumps(vuln)}')
+            self._log.debug(f'ISSUE: {json.dumps(issue)}')
+            self._log.debug(f'SUB-ISSUE: {json.dumps(subissue)}')
+            return
 
         # perform the upsert of the issue and store the response as i.
         try:
@@ -400,6 +405,11 @@ class Tio2Jira:
         '''
         # Pass off the processing of the issue and subissue to _process_vuln
         issue, subissue, jql, sjql = self._process_vuln(vuln, fid)
+        if self.config.get('dry_run', False):
+            self._log.debug(f'VULN: {json.dumps(vuln)}')
+            self._log.debug(f'ISSUE: {json.dumps(issue)}')
+            self._log.debug(f'SUB-ISSUE: {json.dumps(subissue)}')
+            return
 
         # for subtasks, we will simply search to verify that they're still in
         # an open state and then close any issues that are returned.
@@ -590,6 +600,9 @@ class Tio2Jira:
                     # use as a custom field.
                     if tag['key'] in trans_list:
                         acache[asset['id']][tag['key']] = tag['value']
+
+            if self.config.get('dry_run', False):
+                self._log.debug(f'{json.dumps(self._asset_cache)}')
 
             # generate a an export for the open and reopened vulns that match
             # the criticality rating described.  Then pass the export iterator
