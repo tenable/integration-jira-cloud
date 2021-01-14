@@ -5,10 +5,10 @@ generate Jira Tasks and sub-tasks based on the vulnerabilities' current state.
 Vulnerabilities are automatically closed once the state of the vulnerability is
 marked as "fixed" in Tenable.io or Tenable.sc.
 
-* The integration creates a _**Vulnerability Management**_ project using the
-  project key _**VULN**_.  The integration then creates the appropriate custom
-  fields and links them to the associated screen that stores and displays all
-  of the necessary information.
+* The integration creates a _**Vulnerability Management**_ _Business_ project using
+  the project key _**VULN**_ and the _Simplified Task Tracking_ template.  The
+  integration then creates the appropriate custom fields and links them to the
+  associated screen that stores and displays all of the necessary information.
 * The integration creates a _**Task**_ for each Vulnerability and creates each
   _vulnerability instance_ as a _**Sub-task**_.  Example: if you have 5 hosts
   with [plugin 151074][151074], the integration creates 1 Task with the details
@@ -25,7 +25,9 @@ marked as "fixed" in Tenable.io or Tenable.sc.
   available.
 * For those that don't mind a bit more management of the script in exchange for
   less permissions, there is a **setup-only** mode that will create the project,
-  fields, and screens, then generate a full configuration file afterwards.
+  fields, and screens, then generate a full configuration file afterwards.  This
+  file must be then used for all future runs of the integration and may need to
+  be modified with the new, non-elevated user's authentication settings.
 * Task summaries are generated using the following formula:
 
 ```
