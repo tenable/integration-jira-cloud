@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [1.1.19]
+## Fixed
+- Severity Prioritization was only being handled on the issue, not subissue #96
+
+## Changed
+- README not described the TYPE of Jira project being created. #90
+
+
 ## [1.1.18]
 
 ## Fixed
@@ -173,6 +181,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial Version
 
+[1.1.19]: https://github.com/tenable/integration-jira-cloud/compare/1.1.18...1.1.19
+[1.1.18]: https://github.com/tenable/integration-jira-cloud/compare/1.1.17...1.1.18
 [1.1.17]: https://github.com/tenable/integration-jira-cloud/compare/1.1.16...1.1.17
 [1.1.16]: https://github.com/tenable/integration-jira-cloud/compare/1.1.15...1.1.16
 [1.1.15]: https://github.com/tenable/integration-jira-cloud/compare/1.1.14...1.1.15
