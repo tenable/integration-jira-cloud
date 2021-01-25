@@ -245,7 +245,9 @@ class Tio2Jira:
             # priority to the severity rating.
             sevprio = self.config['tenable'].get('severity_prioritization')
             if f['jira_field'] == 'Vulnerability Severity' and sevprio:
-                issue['priority'] = {'id': str(sevprio[value.lower()])}
+                p = {'id': str(sevprio[value.lower()])}
+                issue['priority'] = p
+                subissue['priority'] = p
             processed = None
 
             if value:
