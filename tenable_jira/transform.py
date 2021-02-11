@@ -522,13 +522,16 @@ class Tio2Jira:
             v = flatten(vulnitem)
             self._process_closed_vuln(v, fid)
 
-    def ingest(self, observed_since):
+    def ingest(self, observed_since, first_discovery):
         '''
         Perform the vuln ingestion and transformation.
 
         Args:
             observed_since (int):
                 Unix Timestamp detailing the threshold for vuln age.
+            first_discovery (bool):
+                Whether to add all observed vulns or only those identified
+                for the first time within the age threshold.
         '''
         tags = list()
         for tag in self.config['tenable'].get('tio_tags', list()):
@@ -612,14 +615,28 @@ class Tio2Jira:
             vpr = None
             if self.config['tenable'].get('tio_vpr_thresh'):
                 vpr = {'gte': self.config['tenable'].get('tio_vpr_thresh')}
-            vulns = self._src.exports.vulns(
-                include_unlicensed=True,
-                last_found=observed_since,
-                severity=self.config['tenable']['tio_severities'],
-                num_assets=self.config['tenable'].get('chunk_size', 1000),
-                vpr=vpr,
-                tags=tags
-            )
+
+            # When only looking for new vulnerabilities, use first_found rather
+            # than last_found as the filter to tenable's API to limit results.
+            if first_discovery:
+                vulns = self._src.exports.vulns(
+                    include_unlicensed=True,
+                    first_found=observed_since,
+                    severity=self.config['tenable']['tio_severities'],
+                    num_assets=self.config['tenable'].get('chunk_size', 1000),
+                    vpr=vpr,
+                    tags=tags
+                )
+            else:
+                vulns = self._src.exports.vulns(
+                    include_unlicensed=True,
+                    last_found=observed_since,
+                    severity=self.config['tenable']['tio_severities'],
+                    num_assets=self.config['tenable'].get('chunk_size', 1000),
+                    vpr=vpr,
+                    tags=tags
+                )
+
             self._log.info('Updating and creating issues marked as Open')
             self.create_issues(vulns)
 
@@ -680,9 +697,11 @@ class Tio2Jira:
         # appropriate analysis calls using the query id specified.
         if isinstance(self._src, TenableSC):
             # using the query specified, overload the tool and the last_seen
-            # filter to pull data from the appropriate timeframe.
+            # or first_seen filter to pull data from the appropriate timeframe.
+            seen_filter = 'lastSeen' if not first_discovery else 'firstSeen'
+
             vulns = self._src.analysis.vulns(
-                ('lastSeen', '=', '{}-{}'.format(
+                (seen_filter, '=', '{}-{}'.format(
                     observed_since, int(time.time()))),
                 query_id=self.config['tenable'].get('query_id'),
                 limit=self.config['tenable'].get('page_size', 1000),
