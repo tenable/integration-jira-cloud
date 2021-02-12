@@ -22,7 +22,7 @@ marked as "fixed" in Tenable.io or Tenable.sc.
   as necromancy))
 * All data imports from Tenable.io use the last_found/last_seen fields.  This
   ensures that all issues are updated whenever new information becomes
-  available.
+  available, unless overriden with the `--first-discovery` flag.
 * For those that don't mind a bit more management of the script in exchange for
   less permissions, there is a **setup-only** mode that will create the project,
   fields, and screens, then generate a full configuration file afterwards.  This
@@ -213,8 +213,12 @@ Usage: tenable-jira [OPTIONS] [CONFIGFILE]
 
 Options:
   -s, --observed-since INTEGER  The unix timestamp of the age threshold
+  -f, --first-discovery         Only add issues found for the first time
+                                within the age threshold
   --setup-only                  Performs setup tasks and generates a config
                                 file.
+  --troubleshoot                Outputs some basic troubleshooting data to
+                                file as an issue.
   --help                        Show this message and exit.
 ```
 
@@ -225,8 +229,7 @@ SINCE               The observed-since option.
 RUN_EVERY           The run-every option.
 ```
 
-
-By default, the integration will only create jira tickets for CRITICAL and HIGH tenable findings only.
+By default, the integration will only create jira tickets for CRITICAL and HIGH tenable findings.
 To create jira tickets for MEDIUM and LOW severity findings as well, update the config.yaml file to add the `tio_severities`  to the tenable section, as shown here:
 
 ```yaml
@@ -243,7 +246,16 @@ tenable:
 ...
 ```
 
+By default, the integration will export vulnerabilities for all assets. To export from Tenable and create Jira tickets for tagged items, update the config.yaml file to add the `tio_tags` to the tenable section, as shown here:
 
+```yaml
+tenable:
+  tio_tags:
+    - key: Location
+      value: "Data Center 1"
+
+...
+```
 
 
 ## Example Usage
@@ -258,6 +270,12 @@ Run and only import findings seen since yesterday:
 
 ```
 tenable-jira -s $(date -v-1d +%s) config.yaml
+```
+
+Run and only import findings seen **for the first time** since yesterday:
+
+```
+tenable-jira -f -s $(date -v-1d +%s) config.yaml
 ```
 
 Generate a config file to sidestep setup & validation:
