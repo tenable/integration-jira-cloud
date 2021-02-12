@@ -245,9 +245,13 @@ class Tio2Jira:
             # priority to the severity rating.
             sevprio = self.config['tenable'].get('severity_prioritization')
             if f['jira_field'] == 'Vulnerability Severity' and sevprio:
-                p = {'id': str(sevprio[value.lower()])}
-                issue['priority'] = p
-                subissue['priority'] = p
+                if value.lower() in sevprio:
+                    p = {'id': str(sevprio[value.lower()])}
+                    issue['priority'] = p
+                    subissue['priority'] = p
+                else:
+                    self._log.debug('Severity {} not found in {}'.format(value, sevprio))
+
             processed = None
 
             if value:
@@ -648,7 +652,9 @@ class Tio2Jira:
                 last_fixed=observed_since,
                 state=['fixed'],
                 severity=self.config['tenable']['tio_severities'],
-                num_assets=self.config['tenable'].get('chunk_size', 1000))
+                num_assets=self.config['tenable'].get('chunk_size', 1000),
+                tags=tags
+            )
             self._log.info('Closing Issues Marked as Fixed.')
             self.close_issues(closed)
 
