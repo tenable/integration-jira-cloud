@@ -530,6 +530,7 @@ class Tio2Jira:
             observed_since (int):
                 Unix Timestamp detailing the threshold for vuln age.
         '''
+        observed_since = int(observed_since)
         tags = list()
         for tag in self.config['tenable'].get('tio_tags', list()):
             tags.append((tag['key'], tag['value']))

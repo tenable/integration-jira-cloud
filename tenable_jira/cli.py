@@ -114,7 +114,7 @@ def cli(configfile, observed_since, setup_only=False, troubleshoot=False):
             # if an age was applied, if not, then use the default of 30 days.
             observed_since = arrow.now()\
                 .shift(days=-config['tenable'].get('tio_age', 30))\
-                .floor('day').timestamp
+                .floor('day').timestamp()
 
         source = TenableIO(
             access_key=config['tenable'].get('access_key'),
@@ -148,7 +148,7 @@ def cli(configfile, observed_since, setup_only=False, troubleshoot=False):
         # Github issues would expect to format it all pretty.  This should help
         # reduce the amount of time that is spent with back-and-forth debugging.
         try:
-            ingest.ingest(observed_since)
+            ingest.ingest(int(observed_since))
         except:
             logging.exception('Caught the following Exception')
 
