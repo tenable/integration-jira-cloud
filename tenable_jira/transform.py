@@ -590,8 +590,8 @@ class Tio2Jira:
                 for tag in asset['tags']:
                     # Generate the tag name to use.
                     tag_name = '{key}:{value}'.format(
-                        key=tag['key'],
-                        value=tag['value']
+                        key=tag['key'].replace(' ', '_'),
+                        value=tag['value'].replace(' ', '_')
                     )
 
                     # If the tag name isn't in the cached list, then add it.
