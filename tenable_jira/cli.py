@@ -116,7 +116,7 @@ def cli(configfile, observed_since, first_discovery=False, setup_only=False, tro
             # if an age was applied, if not, then use the default of 30 days.
             observed_since = arrow.now()\
                 .shift(days=-config['tenable'].get('tio_age', 30))\
-                .floor('day').timestamp
+                .floor('day').timestamp()
 
         source = TenableIO(
             access_key=config['tenable'].get('access_key'),
@@ -150,7 +150,7 @@ def cli(configfile, observed_since, first_discovery=False, setup_only=False, tro
         # Github issues would expect to format it all pretty.  This should help
         # reduce the amount of time that is spent with back-and-forth debugging.
         try:
-            ingest.ingest(observed_since, first_discovery)
+            ingest.ingest(int(observed_since), first_discovery)
         except:
             logging.exception('Caught the following Exception')
 
@@ -203,7 +203,7 @@ def cli(configfile, observed_since, first_discovery=False, setup_only=False, tro
             print(output, file=reportfile)
         os.remove('tenable_debug.log')
     elif not setup_only:
-        ingest.ingest(observed_since, first_discovery)
+        ingest.ingest(int(observed_since), first_discovery)
 
         # If we are expected to continually re-run the transformer, then we will
         # need to track the passage of time and run every X hours, where X is

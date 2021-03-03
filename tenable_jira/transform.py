@@ -537,6 +537,7 @@ class Tio2Jira:
                 Whether to add all observed vulns or only those identified
                 for the first time within the age threshold.
         '''
+        observed_since = int(observed_since)
         tags = list()
         for tag in self.config['tenable'].get('tio_tags', list()):
             tags.append((tag['key'], tag['value']))
@@ -596,8 +597,8 @@ class Tio2Jira:
                 for tag in asset['tags']:
                     # Generate the tag name to use.
                     tag_name = '{key}:{value}'.format(
-                        key=tag['key'],
-                        value=tag['value']
+                        key=tag['key'].replace(' ', '_'),
+                        value=tag['value'].replace(' ', '_')
                     )
 
                     # If the tag name isn't in the cached list, then add it.
