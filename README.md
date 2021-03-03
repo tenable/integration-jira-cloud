@@ -257,6 +257,20 @@ tenable:
 ...
 ```
 
+## First Discovery Workflow
+
+When a supported product has many vulnerabilities, or a product is supported by multiple teams, it may make sense to take the work to the teams rather than having multiple teams working from the Jira project setup to track Vulnerabilities. Doing so also allows the Vulnerability project in Jira to remain _pristine_ with regards to tool integration.
+
+To support this, the `--first-discovery` parameter can be passed in, which will return only vulnerabilities from Tenable that are discovered for the first time within the observation window provided.
+
+Doing this will prevent the tool from creating new Jira Tasks and Sub-tasks for vulnerability remediation that has already been assigned to a team, but carries the following caveats:
+* **Task** and **Sub-tasks** will not receive automated updates through the integration, including priority changes, CVSS scores, VPR scores, etc.
+* **Task** and **Sub-tasks** that are in the Vulnerability project can still be automatically _closed_ by the integration.
+* Over time, the state of open vulnerabilities in Jira may diverge between the actual state of vulnerabilities detected by Tenable, as an incomplete remediation will result in a follow-on detection that is not a `first time` detection.
+
+To alleviate this divergence, care must be taken to:
+* Periodically review actual vulnerability scan data in Tenable directly, to validate accurate representation in Jira.
+* Periodically perform a run of the integration **without** the `--first-discovery` flag to corrected for past divergence.
 
 ## Example Usage
 
