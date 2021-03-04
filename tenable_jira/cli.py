@@ -62,7 +62,7 @@ def cli(configfile, observed_since, setup_only=False, troubleshoot=False):
     '''
     # Load the config, but ensure that any additional fields are additive to the
     # basic field set.
-    config_from_file = yaml.load(configfile, Loader=yaml.Loader)
+    config_from_file = yaml.safe_load(configfile)
     fields = config_from_file.pop('custom_fields', list())
     config = dict_merge(base_config(), config_from_file)
     config['fields'] = config['fields'] + fields
