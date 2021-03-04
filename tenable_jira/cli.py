@@ -51,12 +51,14 @@ troubleshooting = '''
 @click.command()
 @click.option('--observed-since', '-s', envvar='SINCE', default=0,
     type=click.INT, help='The unix timestamp of the age threshold')
+@click.option('--first-discovery', '-f', is_flag=True,
+    help='Only add issues found for the first time within the age threshold')
 @click.option('--setup-only', is_flag=True,
     help='Performs setup tasks and generates a config file.')
 @click.option('--troubleshoot', is_flag=True,
     help='Outputs some basic troubleshooting data to file as an issue.')
 @click.argument('configfile', default='config.yaml', type=click.File('r'))
-def cli(configfile, observed_since, setup_only=False, troubleshoot=False):
+def cli(configfile, observed_since, first_discovery=False, setup_only=False, troubleshoot=False):
     '''
     Tenable.io -> Jira Cloud Transformer & Ingester
     '''
@@ -148,7 +150,7 @@ def cli(configfile, observed_since, setup_only=False, troubleshoot=False):
         # Github issues would expect to format it all pretty.  This should help
         # reduce the amount of time that is spent with back-and-forth debugging.
         try:
-            ingest.ingest(int(observed_since))
+            ingest.ingest(int(observed_since), first_discovery)
         except:
             logging.exception('Caught the following Exception')
 
@@ -201,7 +203,7 @@ def cli(configfile, observed_since, setup_only=False, troubleshoot=False):
             print(output, file=reportfile)
         os.remove('tenable_debug.log')
     elif not setup_only:
-        ingest.ingest(observed_since)
+        ingest.ingest(int(observed_since), first_discovery)
 
         # If we are expected to continually re-run the transformer, then we will
         # need to track the passage of time and run every X hours, where X is
@@ -215,7 +217,7 @@ def cli(configfile, observed_since, setup_only=False, troubleshoot=False):
                 time.sleep(sleeper)
                 logging.info(
                     'Initiating ingest with observed_since={}'.format(last_run))
-                ingest.ingest(last_run)
+                ingest.ingest(last_run, first_discovery)
     elif setup_only:
         # In setup-only mode, the ingest will not run, and instead a config file
         # will be generated that will have all of the JIRA identifiers baked in
