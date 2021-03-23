@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.22]
+### Fixed
+- Addressed timing gaps in the daemonization process #107
+- Addressed issue with Jira summary field expecting fields to never be over 255 char. #102
+
+[1.1.22]: https://github.com/tenable/pyTenable/compare/1.1.21...1.1.22
+
 ## [1.1.21]
 ### Fixed
 - Issue identified with yaml.load() method that was insecure.  switched to safe_load instead.
