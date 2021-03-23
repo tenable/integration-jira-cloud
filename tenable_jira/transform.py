@@ -9,6 +9,7 @@ from tenable.sc import TenableSC
 from tenable.io.exports import ExportsIterator
 from tenable.sc.analysis import AnalysisResultsIterator
 
+
 class Tio2Jira:
     _asset_cache = dict()
     _termed_assets = list()
@@ -25,7 +26,6 @@ class Tio2Jira:
         self._fields = self._jira.fields.upsert(config['fields'])
         self._issue_types = self._jira.issue_types.upsert(config['issue_types'])
         self.screen_builder()
-
 
     def screen_builder(self):
         '''
@@ -68,8 +68,8 @@ class Tio2Jira:
                     if tabname == 'default':
                         name = 'Field Tab'
 
-                    # look the the tab listing and set the tid to the id integer
-                    # if it exists.
+                    # look the the tab listing and set the tid to the id
+                    # integer if it exists.
                     for t in tabs:
                         if t['name'] == name:
                             tid = t['id']
@@ -174,9 +174,10 @@ class Tio2Jira:
                     'content': [{
                         'type': 'text',
                         'text': item['name']
-                }]})
+                    }]
+                })
 
-                # The paragraph is derrived from the appropriate
+                # The paragraph is derived from the appropriate
                 # field parameter.  If the string formatting fails
                 # from a KeyError, then replace the output with
                 # an empty paragraph.
@@ -195,10 +196,13 @@ class Tio2Jira:
                 except KeyError:
                     content.append({
                         'type': 'paragraph',
-                        'content': [{
-                            'type': 'text',
-                            'text': 'No Output'
-                    }]})
+                        'content': [
+                            {
+                                'type': 'text',
+                                'text': 'No Output'
+                            }
+                        ]
+                    })
             return {
                 'version': 1,
                 'type': 'doc',
@@ -208,7 +212,7 @@ class Tio2Jira:
         # if the definition is a dictionary, then this is a simple single-field
         # response and we should simple return back the processed string.
         elif isinstance(fdef, dict):
-            return fdef[fid].format(vuln=vuln)
+            return trunc(fdef[fid].format(vuln=vuln), limit=255)
 
     def _process_vuln(self, vuln, fid):
         '''
