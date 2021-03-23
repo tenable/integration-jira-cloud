@@ -9,3 +9,4 @@ dist
 /issue*
 .DS_Store
 .nova
+/test.log
