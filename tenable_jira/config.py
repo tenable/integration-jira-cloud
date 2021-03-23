@@ -1,7 +1,7 @@
 import yaml
 
 def base_config():
-    return yaml.load(config, Loader=yaml.Loader)
+    return yaml.safe_load(config)
 
 # WARNING: These are the default values that control how the transformer
 #          processes vulnerability data into Jira tickets.  While the code
