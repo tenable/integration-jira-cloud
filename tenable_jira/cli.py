@@ -203,22 +203,23 @@ def cli(configfile, observed_since, first_discovery=False, setup_only=False, tro
             print(output, file=reportfile)
         os.remove('tenable_debug.log')
     elif not setup_only:
-        last_run = int(time.time())
-        ingest.ingest(int(observed_since), first_discovery)
-
         # If we are expected to continually re-run the transformer, then we will
         # need to track the passage of time and run every X hours, where X is
         # defined by the user in the configuration.
-        if config.get('service', {}).get('interval', 0) > 0:
-            sleeper = int(config['service']['interval']) * 3600
-            while True:
-                logging.info(
-                    'Sleeping for {}h'.format(sleeper/3600))
+        daemon = True
+        last_run = int(observed_since)
+        while daemon:
+            since = last_run
+            last_run = int(time.time())
+            logging.info(f'Initiating ingest with observed_since={since}')
+            ingest.ingest(since, first_discovery)
+            if config.get('service', {}).get('interval', 0) > 0:
+                sleeper = int(config['service']['interval']) * 3600
+                logging.info(f'Sleeping for {sleeper} seconds')
                 time.sleep(sleeper)
-                logging.info(
-                    'Initiating ingest with observed_since={}'.format(last_run))
-                last_run = int(time.time())
-                ingest.ingest(last_run, first_discovery)
+            else:
+                daemon = False
+
     elif setup_only:
         # In setup-only mode, the ingest will not run, and instead a config file
         # will be generated that will have all of the JIRA identifiers baked in
