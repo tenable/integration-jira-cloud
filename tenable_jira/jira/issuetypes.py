@@ -12,6 +12,11 @@ class IssueTypesAPI(APIEndpoint):
 
     def update(self, id, **kwargs):
         return self._api.put('issuetype/{}'.format(id), json=kwargs).json()
+    
+    def list_by_project(self, project_id, **kwargs):
+        return self._api.get('issuetype/project', params={
+            'projectId': project_id
+        }).json()
 
     def upsert(self, issuetypes):
         itypes = self.list()
