@@ -13,6 +13,8 @@ from tenable.sc.analysis import AnalysisResultsIterator
 class Tio2Jira:
     _asset_cache = dict()
     _termed_assets = list()
+    task = None
+    subtask = None
 
     def __init__(self, src, jira, config):
         # Create the logging facility
@@ -24,8 +26,47 @@ class Tio2Jira:
         # perform the basic creation actions and store the results.
         self._project = self._jira.projects.upsert(**config['project'])
         self._fields = self._jira.fields.upsert(config['fields'])
-        self._issue_types = self._jira.issue_types.upsert(config['issue_types'])
-        self.screen_builder()
+        project = self._jira.projects.details(config['project']['key'])
+        itypes = self._jira.issue_types.list_by_project(self._project['id'])
+        for itype in config['issue_types']:
+            
+            # if the search is platform-specific and there was no overriding search
+            # context presented, then we will overload the search context with the
+            # default platform-specific one.
+            if 'search' not in itype and 'platform' in itype:
+                itype['search'] = itype['platform'][config['tenable']['platform']]
+            
+            # if the issue type is "standard" then look at the issuetypes cached and
+            # look for the normal task issue type, then generate the task data dict
+            # with that jira_id.
+            if itype['type'] == 'standard':
+                for item in itypes:
+                    if not item['subtask']:
+                        self.task = {
+                            'name': itype['name'],
+                            'jira_id': int(item['id']),
+                            'type': itype['type'],
+                            'search': itype['search']
+                        }
+
+            # if the issue type is "subtask" then look at the issuetypes cached and
+            # look for the sub-task issue type, then generate the task data dict
+            # with that jira_id.            
+            elif itype['type'] == 'subtask':
+                for item in itypes:
+                    if item['subtask']:
+                        self.subtask = {
+                            'name': itype['name'],
+                            'jira_id': int(item['id']),
+                            'type': itype['type'],
+                            'search': itype['search']
+                        }        
+        self._log.debug('Issuetypes standard={}, subtask={}'.format(self.task, self.subtask))
+        
+        # Deprecating this process as JIRA now reports the IssueTypes as part
+        # of the project details call.
+        #self._issue_types = self._jira.issue_types.upsert(config['issue_types'])
+        self.screen_builder()        
 
     def screen_builder(self):
         '''
@@ -37,7 +78,7 @@ class Tio2Jira:
         '''
         if not ('no_create' in self.config['screen']):
             sids = list()
-            if 'jira_ids' not in self.config['screen']:
+            if 'jira_ids' not in self.config['screen'] and len(sids) < 1:
                 # if there was no screen ID specified, then we will attempt to
                 # discover it by the default naming convention that Jira uses
                 # to create the screens.  This format has been observed as:
@@ -101,24 +142,6 @@ class Tio2Jira:
                                     self._log.info(
                                         '{} already exists in {}:{}'.format(
                                             fieldname, sid, tid))
-
-    @property
-    def task(self):
-        '''
-        Returns the task
-        '''
-        for i in self._issue_types:
-            if i['type'] == 'standard':
-                return i
-
-    @property
-    def subtask(self):
-        '''
-        Returns the subtask if defined.
-        '''
-        for i in self._issue_types:
-            if i['type'] == 'subtask':
-                return i
 
     def _gen_issue_skel(self):
         '''
