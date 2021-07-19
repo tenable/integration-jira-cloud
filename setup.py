@@ -9,7 +9,7 @@ https://github.com/tenable/integrations-jira-cloud
 
 setup(
     name='tenable-jira-cloud',
-    version='1.1.23',
+    version='1.2.0',
     description='Tenable -> Jira Cloud Bridge',
     author='Tenable, Inc.',
     long_description=long_description,
