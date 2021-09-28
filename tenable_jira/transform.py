@@ -263,11 +263,14 @@ class Tio2Jira:
             else:
                 oper = '~'
 
-            value = vuln.get(f.get(fid))
-            if f.get('is_platform_id'):
+            if f.get('static_value'):
+                value = f.get('static_value')
+            elif f.get('is_platform_id'):
                 _, value = self._get_platform()
-            if f.get('is_tio_tags') and fid == 'tio_field':
+            elif f.get('is_tio_tags') and fid == 'tio_field':
                 value = vuln.get('asset.tags')
+            else:
+                value = vuln.get(f.get(fid))
 
             # Here we will be setting the severity priority for the task and
             # subtask.
