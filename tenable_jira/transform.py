@@ -29,13 +29,13 @@ class Tio2Jira:
         project = self._jira.projects.details(config['project']['key'])
         itypes = self._jira.issue_types.list_by_project(self._project['id'])
         for itype in config['issue_types']:
-            
+
             # if the search is platform-specific and there was no overriding search
             # context presented, then we will overload the search context with the
             # default platform-specific one.
             if 'search' not in itype and 'platform' in itype:
                 itype['search'] = itype['platform'][config['tenable']['platform']]
-            
+
             # if the issue type is "standard" then look at the issuetypes cached and
             # look for the normal task issue type, then generate the task data dict
             # with that jira_id.
@@ -51,7 +51,7 @@ class Tio2Jira:
 
             # if the issue type is "subtask" then look at the issuetypes cached and
             # look for the sub-task issue type, then generate the task data dict
-            # with that jira_id.            
+            # with that jira_id.
             elif itype['type'] == 'subtask':
                 for item in itypes:
                     if item['subtask']:
@@ -60,13 +60,13 @@ class Tio2Jira:
                             'jira_id': int(item['id']),
                             'type': itype['type'],
                             'search': itype['search']
-                        }        
+                        }
         self._log.debug('Issuetypes standard={}, subtask={}'.format(self.task, self.subtask))
-        
+
         # Deprecating this process as JIRA now reports the IssueTypes as part
         # of the project details call.
         #self._issue_types = self._jira.issue_types.upsert(config['issue_types'])
-        self.screen_builder()        
+        self.screen_builder()
 
     def screen_builder(self):
         '''
@@ -254,6 +254,7 @@ class Tio2Jira:
             'issuetype = "{}"'.format(self.subtask['name']),
             'status not in (Closed, Done, Resolved)'
         ]
+        sevprio = self.config['tenable'].get('severity_prioritization')
 
         for f in self._fields:
             # determine the JQL operator that we may need to use.
@@ -268,16 +269,18 @@ class Tio2Jira:
             if f.get('is_tio_tags') and fid == 'tio_field':
                 value = vuln.get('asset.tags')
 
-            # If severity matching is enabled, then we will ned to match up the
-            # priority to the severity rating.
-            sevprio = self.config['tenable'].get('severity_prioritization')
-            if f['jira_field'] == 'Vulnerability Severity' and sevprio:
-                if value.lower() in sevprio:
-                    p = {'id': str(sevprio[value.lower()])}
-                    issue['priority'] = p
-                    subissue['priority'] = p
-                else:
-                    self._log.debug('Severity {} not found in {}'.format(value, sevprio))
+            # Here we will be setting the severity priority for the task and
+            # subtask.
+            if f['jira_field'] == 'Finding Severity':
+                subissue['priority'] = {
+                    'id': str(sevprio.get(value.lower(), 4))
+                }
+                self._log.debug(f'Setting Finding Sev to {value.lower()}')
+            if f['jira_field'] == 'Vulnerability Severity':
+                issue['priority'] = {
+                    'id': str(sevprio.get(value.lower(), 4))
+                }
+                self._log.debug(f'Setting Vuln Sev to {value.lower()}')
 
             processed = None
 

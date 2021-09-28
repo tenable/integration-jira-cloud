@@ -46,6 +46,13 @@ tenable:
     - high
     - critical
 
+  # The severity prioritization mapping.
+  severity_prioritization:
+    critical: 1
+    high: 2
+    medium: 3
+    low: 4
+
   # How many days back should we go?
   tio_age: 30
 
@@ -210,6 +217,7 @@ screen:
       - Vulnerability Port
       - Vulnerability Protocol
       - Patch Publication Date
+      - Finding Severity
     Asset:
       - Tenable Asset UUID
       - Tenable Asset Tags
@@ -335,6 +343,14 @@ fields:
       - Task
       - Sub-task
     tio_field: plugin.risk_factor
+    tsc_field: severity.name
+
+  - jira_field: Finding Severity
+    type: readonlyfield
+    searcher: textsearcher
+    issue_type:
+      - Sub-task
+    tio_field: severity
     tsc_field: severity.name
 
   # Vulnerability Instance fields
