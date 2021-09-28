@@ -171,21 +171,21 @@ issue_default_fields:
   description:
     Task:
       - name: Description
-        tio_field: '{vuln[plugin.description]}'
-        tsc_field: '{vuln[description]}'
+        tio_field: '{vuln[plugin.description]} '
+        tsc_field: '{vuln[description]} '
       - name: Solution
-        tio_field: '{vuln[plugin.solution]}'
-        tsc_field: '{vuln[solution]}'
+        tio_field: '{vuln[plugin.solution]} '
+        tsc_field: '{vuln[solution]} '
     Sub-task:
       - name: Description
-        tio_field: '{vuln[plugin.description]}'
-        tsc_field: '{vuln[description]}'
+        tio_field: '{vuln[plugin.description]} '
+        tsc_field: '{vuln[description]} '
       - name: Solution
-        tio_field: '{vuln[plugin.solution]}'
-        tsc_field: '{vuln[solution]}'
+        tio_field: '{vuln[plugin.solution]} '
+        tsc_field: '{vuln[solution]} '
       - name: Output
-        tio_field: '{vuln[output]}'
-        tsc_field: '{vuln[pluginOutput]}'
+        tio_field: '{vuln[output]} '
+        tsc_field: '{vuln[pluginOutput]} '
 
 
 # Screen definition section
