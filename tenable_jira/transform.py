@@ -274,12 +274,12 @@ class Tio2Jira:
 
             # Here we will be setting the severity priority for the task and
             # subtask.
-            if f['jira_field'] == 'Finding Severity':
+            if sevprio and f['jira_field'] == 'Finding Severity':
                 subissue['priority'] = {
                     'id': str(sevprio.get(value.lower(), 4))
                 }
                 self._log.debug(f'Setting Finding Sev to {value.lower()}')
-            if f['jira_field'] == 'Vulnerability Severity':
+            if sevprio and f['jira_field'] == 'Vulnerability Severity':
                 issue['priority'] = {
                     'id': str(sevprio.get(value.lower(), 4))
                 }

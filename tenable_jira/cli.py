@@ -68,6 +68,7 @@ def cli(configfile, observed_since, first_discovery=False, setup_only=False, tro
     fields = config_from_file.pop('custom_fields', list())
     config = dict_merge(base_config(), config_from_file)
     config['fields'] = config['fields'] + fields
+    sevprio = config['tenable'].get('severity_prioritization')
 
     if config['tenable'].get('tio_transform_tags'):
         attr_cache = config['tenable'].get('tio_asset_attr_cache', list())
@@ -94,12 +95,14 @@ def cli(configfile, observed_since, first_discovery=False, setup_only=False, tro
 
     # Output some basic information detailing the config file used and the
     # python version & system arch.
-    logging.info('Tenable2JiraCloud Version {}'.format(__version__))
-    logging.info('Using configuration file {}'.format(configfile.name))
+    logging.info(f'Tenable2JiraCloud Version {__version__}')
+    logging.info(f'Using configuration file {configfile.name}')
     uname = platform.uname()
-    logging.info('Running on Python {} {}/{}'.format(
-        '.'.join([str(i) for i in sys.version_info][0:3]),
-        uname[0], uname[-2]))
+    logging.info(('Running on Python'
+                  f'{".".join([str(i) for i in sys.version_info][0:3])}'
+                  f'{uname[0]}/{uname[-2]}'
+                  ))
+    logging.debug(f'Severity Prioritization set to: {sevprio}')
 
     # instantiate the Jira object
     jira = Jira(
