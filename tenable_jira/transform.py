@@ -402,6 +402,18 @@ class Tio2Jira:
             self._log.debug(f'SUB-ISSUE: {json.dumps(subissue)}')
             return
 
+        # Identify JSON id for "Tenable Plugin Name"
+        for field in self._fields :
+           if (field['jira_field'] == "Tenable Plugin Name") :
+              plugin_name_id = field['jira_id']
+              break
+
+        # If Tenable Plugin Name is too long, truncate it
+        if (len(issue[plugin_name_id]) > 255) :
+            longString = issue[plugin_name_id]
+            longString = longString[:254]
+            issue[plugin_name_id] = longString
+
         # perform the upsert of the issue and store the response as i.
         try:
             i = self._jira.issues.upsert(fields=issue, jql=' and '.join(jql))
@@ -412,6 +424,11 @@ class Tio2Jira:
                 return
 
         if self.subtask:
+            # If Tenable Plugin Name is too long, truncate it
+            if (len(subissue[plugin_name_id]) > 255) :
+                longString = subissue[plugin_name_id]
+                longString = longString[:254]
+                subissue[plugin_name_id] = longString
             subissue['parent'] = {'key': i['key']}
             try:
                 self._jira.issues.upsert(fields=subissue, jql=' and '.join(sjql))
