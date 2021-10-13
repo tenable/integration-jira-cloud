@@ -407,34 +407,37 @@ class Tio2Jira:
         #  extra processing
         if (vuln['description'] == "") :
            print ("!!!Description is empty!!!")
-           if (vuln['pluginText'] == "") :
-              print ("  !!!PluginText is empty!!!")
-           else :
-              print (len(vuln['pluginText']))
+           if (vuln['pluginText'] != "") :
               pluginTextXML = vuln['pluginText']
               pluginTextXML = "<cm:compliance xmlns:cm = \"tenable-sc.org\">" + pluginTextXML + "</cm:compliance>"
-              pluginTextObj = xmltodict.parse(pluginTextXML)
+              try :
+                 pluginTextObj = xmltodict.parse(pluginTextXML)
+                 vuln['description'] = pluginTextObj["cm:compliance"]["cm:compliance-info"]
+              except :
+                 # pluginText has invalid XML - put in stub information
+                 vuln['description'] = "Unable to get valid formated description from Tenable API - please see Tenable finding directly"
               print ("!!!!!!")
-              # print(pluginTextObj["cm:compliance"]["cm:compliance-info"])
-              vuln['description'] = pluginTextObj["cm:compliance"]["cm:compliance-info"]
               print (vuln['description'])
-              print (len(vuln['description']))
               print ("!!!!!!")
+           else :
+              print ("  !!!PluginText is empty!!!")
 
         if (vuln['solution'] == "") :
            print ("!!!Solution is empty!!!")
-           if (vuln['pluginText'] == "") :
-              print ("  !!!PluginText is empty!!!")
-           else :
-              print (len(vuln['pluginText']))
+           if (vuln['pluginText'] != "") :
               pluginTextXML = vuln['pluginText']
               pluginTextXML = "<cm:compliance xmlns:cm = \"tenable-sc.org\">" + pluginTextXML + "</cm:compliance>"
-              pluginTextObj = xmltodict.parse(pluginTextXML)
+              try :
+                 pluginTextObj = xmltodict.parse(pluginTextXML)
+                 vuln['solution'] = pluginTextObj["cm:compliance"]["cm:compliance-solution"]
+              except :
+                 # pluginText has invalid XML - put in stub information
+                 vuln['solution'] = "Unable to get valid formated solution from Tenable API - please see Tenable finding directly"
               print ("!!!!!!")
-              vuln['solution'] = pluginTextObj["cm:compliance"]["cm:compliance-solution"]
               print (vuln['solution'])
-              print (len(vuln['solution']))
               print ("!!!!!!")
+           else :
+              print ("  !!!PluginText is empty!!!")
 
         # Identify JSON id for "Tenable Plugin Name"
         for field in self._fields :
