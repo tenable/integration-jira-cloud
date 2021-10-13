@@ -1,4 +1,5 @@
 import logging, time, arrow, json, sys
+import xmltodict
 from hashlib import md5
 from pkg_resources import resource_string as embedded
 from restfly.utils import trunc
@@ -401,6 +402,39 @@ class Tio2Jira:
             self._log.debug(f'ISSUE: {json.dumps(issue)}')
             self._log.debug(f'SUB-ISSUE: {json.dumps(subissue)}')
             return
+
+        # If description and solution are null, we need to do some
+        #  extra processing
+        if (vuln['description'] == "") :
+           print ("!!!Description is empty!!!")
+           if (vuln['pluginText'] == "") :
+              print ("  !!!PluginText is empty!!!")
+           else :
+              print (len(vuln['pluginText']))
+              pluginTextXML = vuln['pluginText']
+              pluginTextXML = "<cm:compliance xmlns:cm = \"tenable-sc.org\">" + pluginTextXML + "</cm:compliance>"
+              pluginTextObj = xmltodict.parse(pluginTextXML)
+              print ("!!!!!!")
+              # print(pluginTextObj["cm:compliance"]["cm:compliance-info"])
+              vuln['description'] = pluginTextObj["cm:compliance"]["cm:compliance-info"]
+              print (vuln['description'])
+              print (len(vuln['description']))
+              print ("!!!!!!")
+
+        if (vuln['solution'] == "") :
+           print ("!!!Solution is empty!!!")
+           if (vuln['pluginText'] == "") :
+              print ("  !!!PluginText is empty!!!")
+           else :
+              print (len(vuln['pluginText']))
+              pluginTextXML = vuln['pluginText']
+              pluginTextXML = "<cm:compliance xmlns:cm = \"tenable-sc.org\">" + pluginTextXML + "</cm:compliance>"
+              pluginTextObj = xmltodict.parse(pluginTextXML)
+              print ("!!!!!!")
+              vuln['solution'] = pluginTextObj["cm:compliance"]["cm:compliance-solution"]
+              print (vuln['solution'])
+              print (len(vuln['solution']))
+              print ("!!!!!!")
 
         # Identify JSON id for "Tenable Plugin Name"
         for field in self._fields :
