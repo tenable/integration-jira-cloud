@@ -33,7 +33,8 @@ setup(
         'restfly>=1.1.0',
         'arrow>=1.0.2',
         'Click>=7.0',
-        'pyyaml>=5.1.2'
+        'pyyaml>=5.1.2',
+        'xmltodict>=0.12.0'
     ],
     entry_points={
         'console_scripts': [
