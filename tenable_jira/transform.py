@@ -348,6 +348,30 @@ class Tio2Jira:
             if f['jira_field'] in self.subtask['search']:
                 sjql.append(jql_statement)
 
+        # If description and solution are null, we need to do some
+        #  extra processing
+        if (vuln['description'] == "") :
+           if (vuln['pluginText'] != "") :
+              pluginTextXML = vuln['pluginText']
+              pluginTextXML = "<cm:compliance xmlns:cm = \"tenable-sc.org\">" + pluginTextXML + "</cm:compliance>"
+              try :
+                 pluginTextObj = xmltodict.parse(pluginTextXML)
+                 vuln['description'] = pluginTextObj["cm:compliance"]["cm:compliance-info"]
+              except :
+                 # pluginText has invalid XML - put in stub information
+                 vuln['description'] = "Unable to get valid formated description from Tenable API - please see Tenable finding directly"
+
+        if (vuln['solution'] == "") :
+           if (vuln['pluginText'] != "") :
+              pluginTextXML = vuln['pluginText']
+              pluginTextXML = "<cm:compliance xmlns:cm = \"tenable-sc.org\">" + pluginTextXML + "</cm:compliance>"
+              try :
+                 pluginTextObj = xmltodict.parse(pluginTextXML)
+                 vuln['solution'] = pluginTextObj["cm:compliance"]["cm:compliance-solution"]
+              except :
+                 # pluginText has invalid XML - put in stub information
+                 vuln['solution'] = "Unable to get valid formated solution from Tenable API - please see Tenable finding directly"
+
         # Now to process the default fields.
         for field in self.config['issue_default_fields']:
             fdef = self.config['issue_default_fields'][field]
@@ -395,6 +419,7 @@ class Tio2Jira:
         '''
         perform the necessary actions for opening/updating tasks and sub-tasks.
         '''
+
         # Pass off the processing of the issue and subissue to _process_vuln
         issue, subissue, jql, sjql = self._process_vuln(vuln, fid)
         if self.config.get('dry_run', False):
@@ -402,42 +427,6 @@ class Tio2Jira:
             self._log.debug(f'ISSUE: {json.dumps(issue)}')
             self._log.debug(f'SUB-ISSUE: {json.dumps(subissue)}')
             return
-
-        # If description and solution are null, we need to do some
-        #  extra processing
-        if (vuln['description'] == "") :
-           print ("!!!Description is empty!!!")
-           if (vuln['pluginText'] != "") :
-              pluginTextXML = vuln['pluginText']
-              pluginTextXML = "<cm:compliance xmlns:cm = \"tenable-sc.org\">" + pluginTextXML + "</cm:compliance>"
-              try :
-                 pluginTextObj = xmltodict.parse(pluginTextXML)
-                 vuln['description'] = pluginTextObj["cm:compliance"]["cm:compliance-info"]
-              except :
-                 # pluginText has invalid XML - put in stub information
-                 vuln['description'] = "Unable to get valid formated description from Tenable API - please see Tenable finding directly"
-              print ("!!!!!!")
-              print (vuln['description'])
-              print ("!!!!!!")
-           else :
-              print ("  !!!PluginText is empty!!!")
-
-        if (vuln['solution'] == "") :
-           print ("!!!Solution is empty!!!")
-           if (vuln['pluginText'] != "") :
-              pluginTextXML = vuln['pluginText']
-              pluginTextXML = "<cm:compliance xmlns:cm = \"tenable-sc.org\">" + pluginTextXML + "</cm:compliance>"
-              try :
-                 pluginTextObj = xmltodict.parse(pluginTextXML)
-                 vuln['solution'] = pluginTextObj["cm:compliance"]["cm:compliance-solution"]
-              except :
-                 # pluginText has invalid XML - put in stub information
-                 vuln['solution'] = "Unable to get valid formated solution from Tenable API - please see Tenable finding directly"
-              print ("!!!!!!")
-              print (vuln['solution'])
-              print ("!!!!!!")
-           else :
-              print ("  !!!PluginText is empty!!!")
 
         # Identify JSON id for "Tenable Plugin Name"
         for field in self._fields :
