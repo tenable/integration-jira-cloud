@@ -9,7 +9,7 @@ https://github.com/tenable/integrations-jira-cloud
 
 setup(
     name='tenable-jira-cloud',
-    version='1.2.2',
+    version='1.2.3',
     description='Tenable -> Jira Cloud Bridge',
     author='Tenable, Inc.',
     long_description=long_description,
@@ -26,10 +26,10 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
     ],
-    keywords='tenable tenable_io ibm jira',
+    keywords='tenable tenable_io tenable_sc securitycenter jira',
     packages=find_packages(exclude=['tests']),
     install_requires=[
-        'pytenable>=1.2.3',
+        'pytenable>=1.4.2',
         'restfly>=1.1.0',
         'arrow>=1.0.2',
         'Click>=7.0',

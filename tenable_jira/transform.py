@@ -6,7 +6,7 @@ from restfly.errors import BadRequestError
 from .utils import flatten
 from tenable.io import TenableIO
 from tenable.sc import TenableSC
-from tenable.io.exports import ExportsIterator
+from tenable.io.exports.iterator import ExportsIterator
 from tenable.sc.analysis import AnalysisResultsIterator
 
 
@@ -650,47 +650,32 @@ class Tio2Jira:
             # generate a an export for the open and reopened vulns that match
             # the criticality rating described.  Then pass the export iterator
             # to the create_issues method.
-            vpr = None
+            disc = 'first_found' if first_discovery else 'last_found'
+            vexport = {
+                'include_unlicensed': True,
+                disc: observed_since,
+                'severity': self.config['tenable']['tio_severities'],
+                'num_assets': self.config['tenable'].get('chunk_size', 1000),
+            }
             if self.config['tenable'].get('tio_vpr_thresh'):
-                vpr = {'gte': self.config['tenable'].get('tio_vpr_thresh')}
-
-            # When only looking for new vulnerabilities, use first_found rather
-            # than last_found as the filter to tenable's API to limit results.
-            if first_discovery:
-                vulns = self._src.exports.vulns(
-                    include_unlicensed=True,
-                    first_found=observed_since,
-                    severity=self.config['tenable']['tio_severities'],
-                    num_assets=self.config['tenable'].get('chunk_size', 1000),
-                    vpr=vpr,
-                    tags=tags
-                )
-            else:
-                vulns = self._src.exports.vulns(
-                    include_unlicensed=True,
-                    last_found=observed_since,
-                    severity=self.config['tenable']['tio_severities'],
-                    num_assets=self.config['tenable'].get('chunk_size', 1000),
-                    vpr=vpr,
-                    tags=tags
-                )
+                vexport['vpr'] = {
+                    'gte': self.config['tenable'].get('tio_vpr_thresh')
+                }
+            if tags:
+                vexport['tags'] = tags
 
             self._log.info('Updating and creating issues marked as Open')
-            self.create_issues(vulns)
+            self.create_issues(self._src.exports.vulns(**vexport))
 
             # generate a an export for the fixed vulns that match the
             # criticality rating described.  Then pass the export iterator to
             # the close_issues method.
-            closed = self._src.exports.vulns(
-                include_unlicensed=True,
-                last_fixed=observed_since,
-                state=['fixed'],
-                severity=self.config['tenable']['tio_severities'],
-                num_assets=self.config['tenable'].get('chunk_size', 1000),
-                tags=tags
-            )
+            vexport.pop(disc)
+            vexport['last_fixed'] = observed_since
+            vexport['state'] = ['fixed']
+
             self._log.info('Closing Issues Marked as Fixed.')
-            self.close_issues(closed)
+            self.close_issues(self._src.exports.vulns(**vexport))
 
             # If any assets were terminated or deleted, we will then want to
             # search for them and remove the issue tickets associated with
