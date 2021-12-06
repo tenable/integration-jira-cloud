@@ -292,6 +292,8 @@ class Tio2Jira:
                 # sort of data in it and recast the field as a string.
                 if f['type'] in ['readonlyfield', 'textarea']:
                     processed = str(value)
+                    if f['type'] in ['readonlyfield']:
+                        processed = trunc(processed, 255)
 
                 # for labels, just pass on the field as-is
                 elif f['type'] in ['labels']:
