@@ -1,10 +1,12 @@
 from restfly.endpoint import APIEndpoint
+from .utils import UtilsAPI as utils
 
 class IssuesAPI(APIEndpoint):
+
     def search_validate(self, issue_ids, *jql):
         return self._api.post('jql/match', json={
             'issueIds': list(issue_ids),
-            'jqls': list(jqls)
+            'jqls': list(jql)
         }).json()
 
     def search(self, jql, **kwargs):
@@ -35,7 +37,7 @@ class IssuesAPI(APIEndpoint):
     def transition(self, id, **kwargs):
         return self._api.post('issue/{}/transitions'.format(id), json=kwargs)
 
-    def upsert(self, **kwargs):
+    def upsert(self, new_vuln = [], jira_field_name_mapping= {}, **kwargs):
         jql = kwargs.pop('jql')
         resp = self.search(jql)
         if resp['total'] > 0:
@@ -48,5 +50,35 @@ class IssuesAPI(APIEndpoint):
             issue = self.create(**kwargs)
             self._log.info('CREATED {} {}'.format(
                 issue['key'], kwargs['fields']['summary']))
+            # To get issue details of Jira to send back in tenable
+            issues = self.search("project={} AND key={}".format(kwargs["fields"]["project"]["key"],issue['key']))
+            if issues["total"] == 1:
+                issue = issues["issues"][0]
+            else:
+                raise Exception("Project {} having more than 1 Jira for key {}".format(kwargs["fields"]["project"]["key"],issue['key']))
+            if jira_field_name_mapping:
+                new_vuln.append(self.format_resp(issue,jira_field_name_mapping))
             return issue
 
+    def format_resp(self,issue,jira_field_name_mapping,finding_id = False):
+        # Form the response in structure to pass in tenable.
+        res={
+                "port": issue["fields"].get(jira_field_name_mapping["Vulnerability Port"]),
+                "protocol": issue["fields"].get(jira_field_name_mapping["Vulnerability Protocol"]),
+                "asset_id": ",".join(issue["fields"].get(jira_field_name_mapping["Tenable Asset UUID"])),
+                "plugin_id": issue["fields"].get(jira_field_name_mapping["Tenable Plugin ID"]),
+                "categoty": "jira",
+                "source": "cloud",
+                "external_id": issue["key"],
+                "status": "CLOSED" if str(issue["fields"].get("status").get("statusCategory").get("key")).lower() == "done" else "ACTIVE",
+                "metadata": {
+                    "icon": str(utils.get_base64_code_for_url(self,issue["fields"].get("issuetype").get("iconUrl"))),
+                    "key": issue["fields"].get("project").get("key"),
+                    "url": issue["self"].split("rest")[0]+"browse/"+issue["key"],
+                    "description": issue['fields']['summary']
+                }
+            }
+        if finding_id:
+            res["finding_id"] = issue["fields"].get(jira_field_name_mapping["Tenable Finding ID"])
+        
+        return res

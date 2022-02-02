@@ -5,6 +5,17 @@ tenable:
   # Tenable.io or API Secret Key
   secret_key:
 
+  # The following flag is optional. Currently, Jira got created and updated based on the 
+  # Vulnerability status change in tenable. To send Jira status change/new Jira creation updates, 
+  # mark this as true. default: false 
+  # Note: It may impact performance for a larger date range.
+  update_jira_status_to_tenable: true
+
+  # The following flag is optional. Mark this as true if you want to fetch the pending artifacts. 
+  # default: false
+  # Note: It may impact performance for a larger date range.
+  fetch_pending_artifacts: true
+
 jira:
   # The API Token to use to authenticate to the Jira application
   api_token:

@@ -222,6 +222,7 @@ screen:
       - Tenable Asset UUID
       - Tenable Asset Tags
       - Tenable Platform
+      - Tenable Finding ID
       - Device Hostname
       - Device NetBIOS Name
       - Device DNS Name
@@ -361,6 +362,13 @@ fields:
       - Sub-task
     tio_field: asset.uuid
     tsc_field: uuid
+
+  - jira_field: Tenable Finding ID
+    type: readonlyfield
+    searcher: textsearcher
+    issue_type:
+      - Sub-task
+    tio_field: finding_id
 
   - jira_field: Tenable Asset Tags
     type: labels

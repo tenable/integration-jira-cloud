@@ -145,7 +145,8 @@ def cli(configfile, observed_since, first_discovery=False, setup_only=False, tro
     else:
         logging.error('No valid Tenable platform configuration defined.')
         exit(1)
-    ingest = Tio2Jira(source, jira, config)
+    ingest = Tio2Jira(source, jira, config, update_jira_status_to_tenable=config['tenable'].get("update_jira_status_to_tenable", False), 
+        fetch_pending_artifacts=config['tenable'].get("fetch_pending_artifacts", False))
 
     if troubleshoot:
         # if the troubleshooting flag is set, then we will be collecting some
@@ -219,6 +220,7 @@ def cli(configfile, observed_since, first_discovery=False, setup_only=False, tro
             if config.get('service', {}).get('interval', 0) > 0:
                 sleeper = int(config['service']['interval']) * 3600
                 logging.info(f'Sleeping for {sleeper} seconds')
+                print(f'Wait for {sleeper} seconds to execute next cycle.')
                 time.sleep(sleeper)
             else:
                 daemon = False

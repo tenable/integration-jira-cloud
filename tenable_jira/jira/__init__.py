@@ -4,6 +4,7 @@ from .issues import IssuesAPI
 from .issuetypes import IssueTypesAPI
 from .projects import ProjectsAPI
 from .screens import ScreensAPI
+from .utils import UtilsAPI
 
 class Jira(APISession):
     def __init__(self, url, api_username, api_token, **kwargs):
@@ -35,3 +36,7 @@ class Jira(APISession):
     @property
     def screens(self):
         return ScreensAPI(self)
+
+    @property
+    def utils(self):
+        return UtilsAPI(self)

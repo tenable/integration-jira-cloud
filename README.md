@@ -257,6 +257,16 @@ tenable:
 ...
 ```
 
+By default, the integration will only create Jira tickets based on tenable vulnerability, to send Jira status and creation updates back to tenable, mark `update_jira_status_to_tenable` to `true` for tenable-io. And to collect data from artifacts endpoint mark `fetch_pending_artifacts` to `true` for tenable-io inside the tenable section, as shown here:
+
+```yaml
+tenable:
+  update_jira_status_to_tenable: true
+  fetch_pending_artifacts: true
+
+...
+```
+
 ## First Discovery Workflow
 
 When a supported product has many vulnerabilities, or a product is supported by multiple teams, it may make sense to take the work to the teams rather than having multiple teams working from the Jira project setup to track Vulnerabilities. Doing so also allows the Vulnerability project in Jira to remain _pristine_ with regards to tool integration.
