@@ -257,13 +257,19 @@ tenable:
 ...
 ```
 
-By default, the integration will only create Jira tickets based on tenable vulnerability, to send Jira status and creation updates back to tenable, mark `update_jira_status_to_tenable` to `true` for tenable-io. And to collect data from artifacts endpoint mark `fetch_pending_artifacts` to `true` for tenable-io inside the tenable section, as shown here:
+By default, the integration will only create Jira tickets based on tenable vulnerability, to send Jira status and creation updates back to tenable, mark `update_jira_status_to_tenable` to `true` for tenable-io inside the tenable section, as shown here:
 
 ```yaml
 tenable:
   update_jira_status_to_tenable: true
-  fetch_pending_artifacts: true
+...
+```
 
+By default, the integration will do post/put call in a batch size of 10, to increase/decrease the batch size of post/put call artifacts, provide `batch_size` for tenable-io inside the tenable section, as shown here:
+
+```yaml
+tenable:
+  batch_size: 20
 ...
 ```
 

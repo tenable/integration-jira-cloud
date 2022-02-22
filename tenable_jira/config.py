@@ -223,6 +223,7 @@ screen:
       - Tenable Asset Tags
       - Tenable Platform
       - Tenable Finding ID
+      - Tenable Artifact ID
       - Device Hostname
       - Device NetBIOS Name
       - Device DNS Name
@@ -369,6 +370,13 @@ fields:
     issue_type:
       - Sub-task
     tio_field: finding_id
+
+  - jira_field: Tenable Artifact ID
+    type: readonlyfield
+    searcher: textsearcher
+    issue_type:
+      - Sub-task
+    tio_field: artifact_id
 
   - jira_field: Tenable Asset Tags
     type: labels

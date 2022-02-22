@@ -11,10 +11,9 @@ tenable:
   # Note: It may impact performance for a larger date range.
   update_jira_status_to_tenable: true
 
-  # The following flag is optional. Mark this as true if you want to fetch the pending artifacts. 
-  # default: false
-  # Note: It may impact performance for a larger date range.
-  fetch_pending_artifacts: true
+  # Batch size of post and put calls, default: 10, Optional param
+  # If nothing is provided then at a time 10 artifacts will be sent in post/put call else provided number of artifacts will be sent.
+  batch_size: 10
 
 jira:
   # The API Token to use to authenticate to the Jira application

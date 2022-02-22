@@ -60,7 +60,7 @@ class IssuesAPI(APIEndpoint):
                 new_vuln.append(self.format_resp(issue,jira_field_name_mapping))
             return issue
 
-    def format_resp(self,issue,jira_field_name_mapping,finding_id = False):
+    def format_resp(self,issue,jira_field_name_mapping,finding_id = False, artifact_id = False):
         # Form the response in structure to pass in tenable.
         res={
                 "port": issue["fields"].get(jira_field_name_mapping["Vulnerability Port"]),
@@ -80,5 +80,7 @@ class IssuesAPI(APIEndpoint):
             }
         if finding_id:
             res["finding_id"] = issue["fields"].get(jira_field_name_mapping["Tenable Finding ID"])
+        if artifact_id:
+            res["artifact_id"] = issue["fields"].get(jira_field_name_mapping["Tenable Artifact ID"])
         
         return res
