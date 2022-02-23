@@ -485,7 +485,7 @@ class Tio2Jira:
             fid = 'tio_field'
         elif isinstance(vulns, AnalysisResultsIterator):
             fid = 'tsc_field'
-        else: #TODO: Remove this once we got the final call
+        else: #TODO: Remove this once we got the final SDK method
             fid = 'tio_field'
 
         # if there was no defined task, then raise an exception indicating an
@@ -548,7 +548,7 @@ class Tio2Jira:
             fid = 'tio_field'
         elif isinstance(vulns, AnalysisResultsIterator):
             fid = 'tsc_field'
-        else: #TODO: Remove this once we got the final call
+        else: #TODO: Remove this once we got the final SDK method
             fid = 'tio_field'
 
         # if there was no defined task, then raise an exception indicating an
@@ -571,9 +571,10 @@ class Tio2Jira:
             v = flatten(vulnitem)
             self._process_closed_vuln(v, fid)
 
-    def put_batch_call(self,status_changed_issues_batch):
+    def put_batch_artifact(self,status_changed_issues_batch):
         # Need to replace this code with pytenable method
         res = []
+        #TODO: Implement SDK method call and remove below 3 loggers.
         self._log.info("**************************************************")
         self._log.info("put payload: %s", {"artifacts": status_changed_issues_batch})
         self._log.info("**************************************************")
@@ -584,6 +585,7 @@ class Tio2Jira:
                 "finding_id": "2248d46f-05c9-4fc3-8fa9-ffb6ac7f18e6",
                 "external_id": issue.get("external_id")
             })
+        #TODO: Remove below 3 loggers once SDK method call implemented.
         self._log.info("##################################################")
         self._log.info("put artifact payload: %s", {"artifacts": res})
         self._log.info("##################################################")
@@ -601,16 +603,17 @@ class Tio2Jira:
                 vuln_batch.append(vuln)
                 cnt+=1
                 if cnt == batch_size:
-                    self.put_batch_call(vuln_batch)
+                    self.put_batch_artifact(vuln_batch)
                     cnt = 0
                     vuln_batch = []
-            self.put_batch_call(vuln_batch)
+            self.put_batch_artifact(vuln_batch)
         else: 
             self._log.info("!!No Jira found with finding_id and status change!!")
 
-    def post_batch_call(self,vuln_batch):
+    def post_batch_artifact(self,vuln_batch):
         # Need to replace this code with pytenable method
         res = []
+        #TODO: Implement SDK method call and remove below 3 loggers.
         self._log.info("**************************************************")
         self._log.info("post payload batch: %s", {"artifacts": vuln_batch})
         self._log.info("**************************************************")
@@ -621,6 +624,7 @@ class Tio2Jira:
                 "finding_id": "2248d46f-05c9-4fc3-8fa9-ffb6ac7f18e6",
                 "external_id": vuln.get("external_id")
             })
+        #TODO: Remove below 3 loggers once SDK method call implemented.
         self._log.info("##################################################")
         self._log.info("post artifact payload: %s", {"artifacts": res})
         self._log.info("##################################################")
@@ -639,15 +643,14 @@ class Tio2Jira:
                 vuln_batch.append(vuln)
                 cnt+=1
                 if cnt == batch_size:
-                    yield self.post_batch_call(vuln_batch)
+                    yield self.post_batch_artifact(vuln_batch)
                     cnt = 0
                     vuln_batch = []
-            yield self.post_batch_call(vuln_batch)
+            yield self.post_batch_artifact(vuln_batch)
         else: 
             self._log.info("!!No new vuln found!!")
 
     def upsert_finding_id_and_artifact_id(self,response_batches):
-
         # Update the finding id if already there and updated else add the finding id.
         for responses in response_batches:
             for res in responses["artifacts"]:
@@ -658,7 +661,7 @@ class Tio2Jira:
                 fields[self.jira_field_name_mapping["Tenable Finding ID"]]=res.get("finding_id")
                 fields[self.jira_field_name_mapping["Tenable Artifact ID"]]=res.get("id")
                 issue = self._jira.issues.upsert(jql=jql,fields=fields)
-                self._log.info("finding_id and artifact_id added/updated for jira %s issue= %s",res["external_id"],issue)
+                self._log.debug("finding_id and artifact_id added/updated for jira %s issue= %s",res["external_id"],issue)
 
     def ingest(self, observed_since, first_discovery):
         '''
@@ -837,14 +840,15 @@ class Tio2Jira:
                         updated=dt.strftime("%Y/%m/%d %H:%M")),
                     'ORDER BY updated DESC'
                 ])
+                # count and total defined for pagination to reduce the load.
                 count = 0
-                total = 100
+                total = 100 # Initially defined as 100, will be changed after the first call. 
                 status_changed_issues_with_finding_id = []
                 status_changed_issues_without_finding_id = []
                 while count < total:
                     issue_resp = self._jira.issues.search(issues_jql,maxResults=100,startAt=count)
                     count=count+len(issue_resp['issues'])
-                    total=issue_resp['total']
+                    total=issue_resp['total'] # Total number of Jiras we will get in each call.
                     for issue in issue_resp['issues']:
                         if issue["fields"].get(self.jira_field_name_mapping["Tenable Finding ID"]):
                             status_changed_issues_with_finding_id.append(self._jira.issues.format_resp(issue,self.jira_field_name_mapping,finding_id=True,artifact_id=True))
