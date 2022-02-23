@@ -146,7 +146,7 @@ def cli(configfile, observed_since, first_discovery=False, setup_only=False, tro
         logging.error('No valid Tenable platform configuration defined.')
         exit(1)
     ingest = Tio2Jira(source, jira, config, update_jira_status_to_tenable=config['tenable'].get("update_jira_status_to_tenable", False), 
-        fetch_pending_artifacts=config['tenable'].get("fetch_pending_artifacts", False))
+        batch_size=config['tenable'].get("batch_size", 10))
 
     if troubleshoot:
         # if the troubleshooting flag is set, then we will be collecting some
