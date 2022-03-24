@@ -688,7 +688,7 @@ class Tio2Jira:
                     'Discovered terminated or deleted assets.',
                     'Attempting to clean up orphaned issues.'
                 ]))
-                    closed_transitions = ','.join(f'"{ct}"' for ct in self.config['closed_transitions'])
+                closed_transitions = ','.join(f'"{ct}"' for ct in self.config['closed_transitions'])
                 jql = ' '.join([
                     'project = "{key}" AND "{name}" in ({tags})'.format(
                         key=self._project['key'],
