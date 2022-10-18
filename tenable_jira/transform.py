@@ -660,7 +660,7 @@ class Tio2Jira:
                 'num_assets': self.config['tenable'].get('chunk_size', 1000),
             }
             if self.config['tenable'].get('tio_vpr_thresh'):
-                vexport['vpr'] = {
+                vexport['vpr_score'] = {
                     'gte': self.config['tenable'].get('tio_vpr_thresh')
                 }
             if tags:
