@@ -687,12 +687,21 @@ class Tio2Jira:
                     'Discovered terminated or deleted assets.',
                     'Attempting to clean up orphaned issues.'
                 ]))
+
+            # The Jira Cloud API states that there is no search limit, but it has
+            # been observed to throw 500 errors with large numbers of asset IDs
+            # in the JQL query. Therefore, we will break it up into chunks to process.
+            while len(self._termed_assets) > 0:
+                self._log.debug('Number of termed assets remaining to process: {}'.format(
+                        len(self._termed_assets)
+                ))
+                termedAssetsChunk = self._termed_assets[:25000]
                 jql = ' '.join([
                     'project = "{key}" AND "{name}" in ({tags})'.format(
                         key=self._project['key'],
                         name=field[1],
                         tags=', '.join(['"{}"'.format(i)
-                            for i in self._termed_assets])),
+                            for i in termedAssetsChunk])),
                     'AND status not in (Closed, Done, Resolved)'
                 ])
 
@@ -719,6 +728,10 @@ class Tio2Jira:
                     # Recall the search for API to look for where we are in
                     # the orphaned issues.
                     resp = self._jira.issues.search(jql)
+
+                # Delete the chunk of assets from our total working list
+                del self._termed_assets[:25000]
+
 
         # if the source instance is a Tenable.sc object, then we will make the
         # appropriate analysis calls using the query id specified.
