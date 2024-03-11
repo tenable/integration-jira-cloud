@@ -41,10 +41,12 @@ class Tio2Jira:
             # with that jira_id.
             if itype['type'] == 'standard':
                 for item in itypes:
-                    if not item['subtask']:
+                    # Check if the name of the remote and config issue types match
+                    # before the ID is changed.
+                    if itype['name'] == item['name']:
                         self.task = {
                             'name': itype['name'],
-                            'jira_id': int(item['id']),
+                            'jira_id': int(itype.get('jira_id', item['id'])),
                             'type': itype['type'],
                             'search': itype['search']
                         }
@@ -54,10 +56,12 @@ class Tio2Jira:
             # with that jira_id.
             elif itype['type'] == 'subtask':
                 for item in itypes:
-                    if item['subtask']:
+                    # Check if the name of the remote and config issue types match
+                    # before the ID is changed.
+                    if itype['name'] == item['name']:
                         self.subtask = {
                             'name': itype['name'],
-                            'jira_id': int(item['id']),
+                            'jira_id': int(itype.get('jira_id', item['id'])),
                             'type': itype['type'],
                             'search': itype['search']
                         }
