@@ -244,15 +244,16 @@ class Tio2Jira:
         '''
         issue = self._gen_issue_skel()
         subissue = self._gen_subissue_skel()
+        closed_transitions = ','.join(f'"{ct}"' for ct in self.config['closed_transitions'])
         jql = [
             'project = "{}"'.format(self._project['key']),
             'issuetype = "{}"'.format(self.task['name']),
-            'status not in (Closed, Done, Resolved)'
+            'status not in ({})'.format(closed_transitions)
         ]
         sjql = [
             'project = "{}"'.format(self._project['key']),
             'issuetype = "{}"'.format(self.subtask['name']),
-            'status not in (Closed, Done, Resolved)'
+            'status not in ({})'.format(closed_transitions)
         ]
         sevprio = self.config['tenable'].get('severity_prioritization')
 
@@ -687,13 +688,14 @@ class Tio2Jira:
                     'Discovered terminated or deleted assets.',
                     'Attempting to clean up orphaned issues.'
                 ]))
+                closed_transitions = ','.join(f'"{ct}"' for ct in self.config['closed_transitions'])
                 jql = ' '.join([
                     'project = "{key}" AND "{name}" in ({tags})'.format(
                         key=self._project['key'],
                         name=field[1],
                         tags=', '.join(['"{}"'.format(i)
                             for i in self._termed_assets])),
-                    'AND status not in (Closed, Done, Resolved)'
+                    'AND status not in ({})'.format(closed_transitions)
                 ])
 
                 # We will keep calling the search API and working down the
