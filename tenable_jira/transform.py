@@ -321,6 +321,10 @@ class Tio2Jira:
                         processed = arrow.get(int(value)).format(
                             'YYYY-MM-DDTHH:mm:ss.SSSZ')
 
+                # Cast to float for numeric fields
+                elif f['type'] in ['float']:
+                    processed = float(value)
+
                 # For anything else, just pass through
                 else:
                     processed = value
