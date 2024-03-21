@@ -1,0 +1,423 @@
+[tenable]
+platform        = ""
+access_key      =
+secret_key      =
+url             = "https://cloud.tenable.com"
+severities      = ["high", "critical"]
+vuln_age        = 30
+last_run        = 0
+#tsc_query_id    = 100000
+tsc_page_size   = 1000
+tvm_chunk_size  = 1000
+platforms.tvm   = "Tenable Vulnerability Management"
+platforms.tsc   = "Tenable Security Center"
+
+#[mapping_database]
+#path    = "mapping.db"
+
+[jira]
+api_token               =
+api_username            =
+url                     = # "https://instance.atlassian.net"
+closed                  = "Done"
+closed_map              = ["Closed", "Done", "Resolved"]
+#screen_ids              = []
+manage_screens          = true
+severity_map.critical   = 1
+severity_map.high       = 2
+severity_map.medium     = 3
+severity_map.low        = 4
+state_map.open          = true
+state_map.reopened      = true
+state_map.fixed         = false
+
+[jira.project]
+key                 = "VULN22"
+lead_account_id     = "557058:071b0552-f7ed-4fe4-a718-891ea15592a0"
+name                = "Vulnerability Management"
+description         = "Managing vulnerabilities discovered from Tenable."
+url                 = "https://tenable.com"
+assignee            = "UNASSIGNED"
+type_key            = "business"
+template_key        = "com.atlassian.jira-core-project-templates:jira-core-simplified-task-tracking"
+
+
+[jira.task]
+name            = "Task"
+type            = "standard"
+search.tsc      = ["Tenable Plugin ID"]
+search.tvm      = ["Tenable Plugin ID"]
+summary.tsc     = "[{f[pluginID]}] {f[pluginName]}"
+summary.tvm     = "[{f[plugin.id]}] {f[plugin.name]}"
+
+[[jira.task.description.tvm]]
+name    = "Description"
+attr  = "plugin.description"
+
+[[jira.task.description.tvm]]
+name    = "Solution"
+attr  = "solution"
+
+[[jira.task.description.tsc]]
+name    = "Description"
+attr  = "description"
+
+[[jira.task.description.tsc]]
+name    = "Solution"
+attr  = "solution"
+
+
+[jira.subtask]
+name        = "Sub-task"
+type        = "subtask"
+search.tvm  = [
+    "Tenable Platform",
+    "Tenable Plugin ID",
+    "Tenable Asset UUID",
+    "Vulnerability Port",
+    "Vulnerability Protocol"
+]
+search.tsc  = [
+    "Tenable Platform",
+    "Tenable Plugin ID",
+    "Tenable Asset UUID",
+    "Device IPv4 Addresses",
+    "Device IPv6 Addresses",
+    "Vulnerability Port",
+    "Vulnerability Protocol"
+]
+summary.tvm = "[{f[asset.hostname]}/{f[port.port]}/{f[port.protocol]}] [{f[plugin.id]}] {f[plugin.name]}"
+summary.tsc = "[{f[ip]}/{f[port]}/{f[protocol]}] [{f[pluginID]}] {f[pluginName]}"
+
+[[jira.subtask.description.tvm]]
+name    = "Description"
+attr  = "plugin.description"
+
+[[jira.subtask.description.tvm]]
+name    = "Solution"
+attr  = "solution"
+
+[[jira.subtask.description.tvm]]
+name    = "Output"
+attr  = "output"
+
+[[jira.subtask.description.tsc]]
+name    = "Description"
+attr  = "description"
+
+[[jira.subtask.description.tsc]]
+name    = "Solution"
+attr  = "solution"
+
+[[jira.subtask.description.tsc]]
+name    = "Output"
+attr  = "pluginOutput"
+
+
+# cascadingselect: Enables values to be selected from two levels of select lists (value: com.atlassian.jira.plugin.system.customfieldtypes:cascadingselect)
+# datepicker: Stores a date using a picker control (value: com.atlassian.jira.plugin.system.customfieldtypes:datepicker)
+# datetime: Stores a date with a time component (value: com.atlassian.jira.plugin.system.customfieldtypes:datetime)
+# float: Stores and validates a numeric (floating point) input (value: com.atlassian.jira.plugin.system.customfieldtypes:float)
+# grouppicker: Stores a user group using a picker control (value: com.atlassian.jira.plugin.system.customfieldtypes:grouppicker)
+# importid: A read-only field that stores the ID the issue had in the system it was imported from (value: com.atlassian.jira.plugin.system.# customfieldtypes:importid)
+# labels: Stores labels (value: com.atlassian.jira.plugin.system.customfieldtypes:labels)
+# multicheckboxes: Stores multiple values using checkboxes (value: ``)
+# multigrouppicker: Stores multiple user groups using a picker control (value: ``)
+# multiselect: Stores multiple values using a select list (value: com.atlassian.jira.plugin.system.customfieldtypes:multicheckboxes)
+# multiuserpicker: Stores multiple users using a picker control (value: com.atlassian.jira.plugin.system.customfieldtypes:multigrouppicker)
+# multiversion: Stores multiple versions from the versions available in a project using a picker control (value: com.atlassian.jira.plugin.system.# customfieldtypes:multiversion)
+# project: Stores a project from a list of projects that the user is permitted to view (value: com.atlassian.jira.plugin.system.# customfieldtypes:project)
+# radiobuttons: Stores a value using radio buttons (value: com.atlassian.jira.plugin.system.customfieldtypes:radiobuttons)
+# readonlyfield: Stores a read-only text value, which can only be populated via the API (value: com.atlassian.jira.plugin.system.# customfieldtypes:readonlyfield)
+# select: Stores a value from a configurable list of options (value: com.atlassian.jira.plugin.system.customfieldtypes:select)
+# textarea: Stores a long text string using a multiline text area (value: com.atlassian.jira.plugin.system.customfieldtypes:textarea)
+# textfield: Stores a text string using a single-line text box (value: com.atlassian.jira.plugin.system.customfieldtypes:textfield)
+# url: Stores a URL (value: com.atlassian.jira.plugin.system.customfieldtypes:url)
+# userpicker: Stores a user using a picker control (value: com.atlassian.jira.plugin.system.customfieldtypes:userpicker)
+# version: Stores a version using a picker control (value: com.atlassian.jira.plugin.system.customfieldtypes:version
+
+# cascadingselect: cascadingselectsearcher
+# datepicker: daterange
+# datetime: datetimerange
+# float: exactnumber or numberrange
+# grouppicker: grouppickersearcher
+# importid: exactnumber or numberrange
+# labels: labelsearcher
+# multicheckboxes: multiselectsearcher
+# multigrouppicker: multiselectsearcher
+# multiselect: multiselectsearcher
+# multiuserpicker: userpickergroupsearcher
+# multiversion: versionsearcher
+# project: projectsearcher
+# radiobuttons: multiselectsearcher
+# readonlyfield: textsearcher
+# select: multiselectsearcher
+# textarea: textsearcher
+# textfield: textsearcher
+# url: exacttextsearcher
+# userpicker: userpickergroupsearcher
+# version: versionsearcher
+
+[[jira.fields]]
+name        = "Tenable Asset UUID"
+screen_tab  = "Assets"
+type        = "labels"
+searcher    = "labelsearcher"
+task_types  = ["subtask"]
+attr.tvm    = "asset.uuid"
+attr.tsc    = "asset.uuid"
+
+[[jira.fields]]
+name        = "Tenable Asset Tags"
+screen_tab  = "Assets"
+type        = "labels"
+searcher    = "labelsearcher"
+task_types  = ["subtask"]
+attr.tvm    = "asset.tags"
+
+[[jira.fields]]
+name        = "Tenable Platform"
+screen_tab  = "Assets"
+type        = "readonlyfield"
+searcher    = "textsearcher"
+platform_id = true
+task_types  = ["subtask"]
+
+[[jira.fields]]
+name        = "Device Hostname"
+screen_tab  = "Assets"
+type        = "labels"
+searcher    = "labelsearcher"
+task_types  = ["subtask"]
+attr.tvm    = "asset.hostname"
+attr.tsc    = "dnsName"
+
+[[jira.fields]]
+name        = "Device NetBIOS Name"
+screen_tab  = "Assets"
+type        = "readonlyfield"
+searcher    = "textsearcher"
+task_types  = ["subtask"]
+attr.tsc    = "netbiosName"
+
+[[jira.fields]]
+name        = "Device DNS Name"
+screen_tab  = "Assets"
+type        = "readonlyfield"
+searcher    = "textsearcher"
+task_types  = ["subtask"]
+attr.tvm   = "asset.fqdn"
+attr.tsc   = "dnsName"
+
+[[jira.fields]]
+name        = "Device IPv4 Addresses"
+screen_tab  = "Assets"
+type        = "labels"
+searcher    = "labelsearcher"
+task_types  = ["subtask"]
+attr.tvm    = "asset.ipv4"
+attr.tsc    = "asset.ip"
+
+[[jira.fields]]
+name        = "Device IPv6 Addresses"
+screen_tab  = "Assets"
+type        = "labels"
+searcher    = "labelsearcher"
+task_types  = ["subtask"]
+attr.tvm    = "asset.ipv6"
+
+[[jira.fields]]
+name        = "Device Network ID"
+screen_tab  = "Assets"
+type        = "readonlyfield"
+searcher    = "textsearcher"
+task_types  = ["subtask"]
+attr.tvm    = "asset.network_id"
+
+[[jira.fields]]
+name        = "Vulnerability Repository ID"
+screen_tab  = "Assets"
+type        = "readonlyfield"
+searcher    = "textsearcher"
+task_types  = ["subtask"]
+attr.tsc    = "repository.id"
+
+[[jira.fields]]
+name        = "Vulnerability Repository Name"
+screen_tab  = "Assets"
+type        = "readonlyfield"
+searcher    = "textsearcher"
+task_types  = ["subtask"]
+attr.tsc    = "repository.name"
+
+[[jira.fields]]
+name        = "CVEs"
+screen_tab  = "Vulnerability"
+type        = "labels"
+searcher    = "labelsearcher"
+task_types  = ["task"]
+attr.tvm    = "pluvin.cve"
+attr.tsc    = "cve"
+
+[[jira.fields]]
+name        = "Tenable VPR Score"
+screen_tab  = "Vulnerability"
+type        = "float"
+searcher    = "numberrange"
+task_types  = ["task", "subtask"]
+attr.tvm    = "plugin.vpr.score"
+attr.tsc    = "vprScore"
+
+[[jira.fields]]
+name        = "CVSSv2 Base Score"
+screen_tab  = "Vulnerability"
+type        = "float"
+searcher    = "numberrange"
+task_types  = ["task", "subtask"]
+attr.tvm    = "plugin.cvss_base_score"
+attr.tsc    = "baseScore"
+
+[[jira.fields]]
+name        = "CVSSv2 Temporal Score"
+screen_tab  = "Vulnerability"
+type        = "float"
+searcher    = "numberrange"
+task_types  = ["task", "subtask"]
+attr.tvm    = "plugin.cvss_temporal_score"
+attr.tsc    = "temporalScore"
+
+[[jira.fields]]
+name        = "CVSSv3 Base Score"
+screen_tab  = "Vulnerability"
+type        = "float"
+searcher    = "numberrange"
+task_types  = ["task", "subtask"]
+attr.tvm    = "plugin.cvss3_base_score"
+attr.tsc    = "cvssV3BaseScore"
+
+[[jira.fields]]
+name        = "CVSSv3 Temporal Score"
+screen_tab  = "Vulnerability"
+type        = "float"
+searcher    = "numberrange"
+task_types  = ["task", "subtask"]
+attr.tvm    = "plugin.cvss3_temporal_score"
+attr.tsc    = "cvssV3TemporalScore"
+
+[[jira.fields]]
+name        = "Tenable Plugin ID"
+screen_tab  = "Vulnerability"
+type        = "readonlyfield"
+searcher    = "textsearcher"
+task_types  = ["task", "subtask"]
+attr.tvm    = "plugin.id"
+attr.tsc    = "pluginID"
+
+[[jira.fields]]
+name        = "Tenable Plugin Family"
+screen_tab  = "Vulnerability"
+type        = "readonlyfield"
+searcher    = "textsearcher"
+task_types  = ["task", "subtask"]
+attr.tvm    = "plugin.family"
+attr.tsc    = "family.name"
+
+[[jira.fields]]
+name        = "Tenable Plugin Name"
+screen_tab  = "Vulnerability"
+type        = "readonlyfield"
+searcher    = "textsearcher"
+task_types  = ["task", "subtask"]
+attr.tvm    = "plugin.name"
+attr.tsc    = "pluginName"
+
+[[jira.fields]]
+name            = "Vulnerability Severity"
+screen_tab      = "Vulnerability"
+type            = "readonlyfield"
+searcher        = "textsearcher"
+task_types      = ["task", "subtask"]
+attr.tvm        = "plugin.risk_factor"
+attr.tsc        = "severity.name"
+map_to_priority = true
+
+[[jira.fields]]
+name        = "Vulnerability First Seen"
+screen_tab  = "Vulnerability"
+type        = "datetime"
+searcher    = "datetimerange"
+task_types  = ["task", "subtask"]
+attr.tvm    = "first_found"
+attr.tsc    = "firstSeen"
+
+[[jira.fields]]
+name        = "Vulnerability Last Seen"
+screen_tab  = "Vulnerability"
+type        = "datetime"
+searcher    = "datetimerange"
+task_types  = ["task", "subtask"]
+attr.tvm    = "last_found"
+attr.tsc    = "lastSeen"
+
+[[jira.fields]]
+name        = "Vulnerability Last Fixed"
+screen_tab  = "Vulnerability"
+type        = "datetime"
+searcher    = "datetimerange"
+task_types  = ["task", "subtask"]
+attr.tvm    = "last_fixed"
+
+[[jira.fields]]
+name            = "Vulnerability State"
+screen_tab      = "Vulnerability"
+type            = "readonlyfield"
+searcher        = "textsearcher"
+task_types      = ["task", "subtask"]
+attr.tvm        = "state"
+attr.tsc        = "integration_state"
+map_to_state    = true
+
+[[jira.fields]]
+name        = "Vulnerability Port"
+screen_tab  = "Vulnerability"
+type        = "readonlyfield"
+searcher    = "textsearcher"
+task_types  = ["task", "subtask"]
+attr.tvm    = "port.port"
+attr.tsc    = "port"
+
+[[jira.fields]]
+name        = "Vulnerability Protocol"
+screen_tab  = "Vulnerability"
+type        = "readonlyfield"
+searcher    = "textsearcher"
+task_types  = ["task", "subtask"]
+attr.tvm    = "port.protocol"
+attr.tsc    = "protocol"
+
+[[jira.fields]]
+name        = "Patch Publication Date"
+screen_tab  = "Vulnerability"
+type        = "datepicker"
+searcher    = "daterange"
+task_types  = ["task", "subtask"]
+attr.tvm    = "plugin.patch_publication_date"
+attr.tsc    = "patchPubDate"
+
+[[jira.fields]]
+name        = "Finding Severity"
+screen_tab  = "Vulnerability"
+type        = "readonlyfield"
+searcher    = "textsearcher"
+task_types  = ["task", "subtask"]
+attr.tvm    = "severity"
+attr.tsc    = "severity.name"
+
+[[jira.fields]]
+name        = "Tenable Finding ID"
+screen_tab  = "Vulnerability"
+type        = "readonlyfield"
+searcher    = "textsearcher"
+task_types  = ["subtask"]
+attr.tvm    = "integration_finding_id"
+attr.tsc    = "integration_finding_id"
