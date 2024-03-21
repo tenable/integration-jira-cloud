@@ -1,0 +1,7 @@
+__pycache__
+.DS_Store
+.python-version
+.nova
+.coverage
+*.egg-info
+/dist

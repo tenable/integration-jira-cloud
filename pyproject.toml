@@ -1,0 +1,57 @@
+[build-system]
+requires        = ["setuptools"]
+build-backend   = "setuptools.build_meta"
+
+[project]
+dynamic         = ["version", "readme"]
+name            = "tenb2jira"
+description     = "Tenable Vulnerability Management to Jira Cloud issue manager"
+authors         = [
+ {name = "Tenable, Inc.", email = "smcgrath@tenable.com" }
+]
+keywords        = [
+    "tenable",
+    "tenable vulnerability management",
+    "tenable security center",
+    "tenable.io",
+    "tenable.sc",
+    "jira",
+    "jira cloud"
+]
+license = {text = "MIT License"}
+classifiers     = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Information Technology",
+    "Topic :: System :: Systems Administration",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12"
+]
+dependencies    = [
+    "arrow>=1.3.0",
+    "restfly>=1.4.5",
+    "typer>=0.9.0",
+    "tomlkit>=0.12.4",
+    "rich>=13.3.1",
+    "pytenable>=1.4.20",
+    "SQLAlchemy>=2.0.28",
+    "pydantic>=2.7.1"
+]
+
+[project.urls]
+Homepage        = "https://github.com/tenable/integration-jira-cloud"
+Repository      = "https://github.com/tenable/integration-jira-cloud"
+Issues          = "https://github.com/tenable/integration-jira-cloud/issues"
+Changelog       = "https://github.com/tenable/integration-jira-cloud/blob/master/CHANGELOG.md"
+
+[project.scripts]
+tenb2jira       = "tenb2jira.cli:app"
+
+[tool.setuptools.dynamic]
+version = {attr = "tenb2jira.version.version"}
+readme = {file = ["README.md"], content-type = "text/markdown"}
+
+[tool.setuptools.packages.find]
+include         = ["tenb2jira*"]
+
