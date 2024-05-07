@@ -3,24 +3,24 @@ from enum import Enum
 from pydantic import BaseModel, Field, ValidationError
 
 
-class Platform(Enum):
-    tvm = 'tvm'
-    tsc = 'tsc'
+class Platform(str, Enum):
+    tvm: str = 'tvm'
+    tsc: str = 'tsc'
 
 
-class Severity(Enum):
+class Severity(str, Enum):
     critical = 'critical'
     high = 'high'
     medium = 'medium'
     low = 'low'
 
 
-class TaskType(Enum):
-    task = 'task'
-    subtask = 'subtask'
+class TaskType(str, Enum):
+    task: str = 'task'
+    subtask: str = 'subtask'
 
 
-class State(Enum):
+class State(str, Enum):
     open = 'open'
     reopened = 'reopened'
     fixed = 'fixed'
@@ -31,7 +31,7 @@ class JiraParagraph(BaseModel):
     attr: str
 
 
-class JiraDescription(BaseModel):
+class JiraDescription(BaseModel, use_enum_values=True):
     tvm: List[JiraParagraph]
     tsc: List[JiraParagraph]
 
@@ -43,7 +43,7 @@ class SeverityMap(BaseModel):
     low: int
 
 
-class JiraField(BaseModel):
+class JiraField(BaseModel, use_enum_values=True):
     id: Optional[str] = None
     name: str
     screen_tab: str
@@ -57,7 +57,7 @@ class JiraField(BaseModel):
     static_value: Optional[str] = None
 
 
-class JiraTask(BaseModel):
+class JiraTask(BaseModel, use_enum_values=True):
     id: Optional[int] = None
     name: str
     type: str
@@ -77,7 +77,7 @@ class JiraProject(BaseModel):
     template_key: str
 
 
-class Jira(BaseModel):
+class Jira(BaseModel, use_enum_values=True):
     api_token: str
     api_username: str
     url: str
@@ -89,7 +89,7 @@ class Jira(BaseModel):
     fields: List[JiraField]
 
 
-class Tenable(BaseModel):
+class Tenable(BaseModel, use_enum_values=True):
     platform: Platform
     access_key: str
     secret_key: str
@@ -106,7 +106,7 @@ class MappingDatabase(BaseModel):
     path: str
 
 
-class Configuration(BaseModel):
+class Configuration(BaseModel, use_enum_values=True):
     tenable: Tenable
     jira: Jira
     mapping_database: MappingDatabase

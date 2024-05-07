@@ -92,7 +92,7 @@ def validate(configfile: Path):
     errors = validator.validate(config)
     if errors:
         for error in errors:
-            location = '.'.join(error.get('loc', []))
+            location = '.'.join([str(e) for e in error.get('loc', [])])
             data = tomlkit.dumps(error.get('input'))
             console.print(f'{location}: {error.get("msg")}')
             console.print(data)
