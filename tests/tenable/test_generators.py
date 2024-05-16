@@ -22,7 +22,7 @@ def tvm_assets():
                     'value': 'Illinois',
                 },
                 {
-                    'key': 'Test',
+                    'key': 'Test Value',
                     'value': 'Something'
                 }
             ],
@@ -150,7 +150,9 @@ def test_tvm_merged_data(tvm_assets, tvm_finding):
                                     )
     finding = next(tvm_generator)
     assert finding['asset.uuid'] == '7f68f334-17ba-4ba0-b057-b77ddd783e60'
-    assert finding['asset.tags'] == ['Location:Illinois', 'Test:Something']
+    assert finding['asset.tags'] == ['Location:Illinois',
+                                     'Test_Value:Something'
+                                     ]
     assert finding['integration_finding_id'] == test_uuid
     assert finding['integration_pid_updated'] == pmoddate
     assert finding['asset.test'] == 'value'

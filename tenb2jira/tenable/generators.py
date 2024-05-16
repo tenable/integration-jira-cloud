@@ -52,9 +52,12 @@ def tvm_merged_data(assets_iter: 'ExportsIterator',
     # other asset attributes available within the finding for the Jira ticket
     # without build a database to match everything up into.
     assets = {}
+    def spf(value: str) -> str:
+        return value.replace(' ', '_')
     for asset in assets_iter:
         assets[asset['id']] = {
-            'tags': [f'{t["key"]}:{t["value"]}' for t in asset['tags']],
+            'tags': [f'{spf(t["key"])}:{spf(t["value"])}'
+                     for t in asset['tags']],
             'ipv4': asset['ipv4s'],
             'ipv6': asset['ipv6s'],
         }
