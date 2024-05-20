@@ -229,6 +229,7 @@ def test_generate(jira_config,
         'summary': '[Test Name]',
         'project': {'key': 'VULN'},
         'issuetype': {'id': 1},
+        'priority': {'id': '1'},
     }
     assert tobj.priority == '1'
     jql = ('project = "VULN" AND issuetype = "Task" '

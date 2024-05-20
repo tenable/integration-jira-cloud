@@ -43,6 +43,7 @@ class TaskInstance:
         """
         value = str(self.fields[field_id]).lower()
         self.priority = str(self.idef.severity_map[value])
+        self.fields['priority'] = {'id': self.priority}
 
     def gen_state(self, field_id: str):
         """
