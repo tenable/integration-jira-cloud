@@ -119,7 +119,7 @@ class Processor:
                         issues.append(model(**item).asdict())
                 if issues:
                     stmt = insert(model).values(issues)\
-                                        .on_conflict_do_nothing()
+                                        .prefix_with('OR IGNORE')
                     s.execute(stmt)
                     s.commit()
 
@@ -431,6 +431,7 @@ class Processor:
         self.config['tenable']['last_run'] = ts
         self.finished_time = datetime.now()
 
+        self.engine.dispose()
         # Delete the mapping database.
         with Path(self.config["mapping_database"].get("path")) as p:
             p.unlink()
