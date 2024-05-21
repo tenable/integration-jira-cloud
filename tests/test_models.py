@@ -7,11 +7,11 @@ from tenb2jira.models import TaskMap, SubTaskMap
 def test_taskmap():
     now = datetime.datetime.now()
     obj = TaskMap(plugin_id=1,
-                  jira_id=1,
+                  jira_id='VULN-1',
                   updated=now
                   )
     assert obj.plugin_id == 1
-    assert obj.jira_id == 1
+    assert obj.jira_id == 'VULN-1'
     assert obj.updated == now
 
 
@@ -21,7 +21,7 @@ def test_subtaskmap():
     now = datetime.datetime.now()
     obj = SubTaskMap(finding_id=fid,
                      asset_id=aid,
-                     jira_id=1,
+                     jira_id='VULN-1',
                      plugin_id=1,
                      is_open=True,
                      updated=now
@@ -30,18 +30,18 @@ def test_subtaskmap():
     assert obj.finding_id == UUID(fid)
     assert obj.asset_id == UUID(aid)
     assert obj.plugin_id == 1
-    assert obj.jira_id == 1
+    assert obj.jira_id == 'VULN-1'
     assert obj.is_open == True
 
 
 def test_asdict():
     now = datetime.datetime.now()
     obj = TaskMap(plugin_id=1,
-                  jira_id=1,
+                  jira_id='VULN-1',
                   updated=now
                   )
     assert obj.asdict() == {
         'plugin_id': 1,
-        'jira_id': 1,
+        'jira_id': 'VULN-1',
         'updated': now
     }
