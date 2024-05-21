@@ -64,7 +64,7 @@ class Processor:
                 self.config['jira']['closed_id'] = transition.id
                 return transition.id
 
-    def close_task(self, jira_id: int):
+    def close_task(self, jira_id: str):
         """
         Closes the Jira issue and appends the configured comment within Jira.
         """
@@ -114,7 +114,7 @@ class Processor:
                         item[fields[key]] = value
                     # item = {fields[k]: v for k, v in issue.fields.items()}
                     item['updated'] = self.start_time
-                    item['jira_id'] = int(issue.id)
+                    item['jira_id'] = issue.key
                     if not skip:
                         issues.append(model(**item).asdict())
                 if issues:
@@ -172,7 +172,6 @@ class Processor:
                 if sql.updated <= self.start_time:
                     self.jira.api.issues.update(sql.jira_id,
                                                 fields=task.fields,
-                                                priority=task.priority,
                                                 )
                 sql.updated = datetime.now()
                 s.commit()
@@ -197,7 +196,7 @@ class Processor:
         # back to the caller.
         if len(page.issues) == 1:
             sql = TaskMap(plugin_id=task.fields[self.plugin_id],
-                          jira_id=page.issues[0].id,
+                          jira_id=page.issues[0].key,
                           updated=datetime.now(),
                           )
             s.add(sql)
@@ -205,7 +204,6 @@ class Processor:
             if finding.get('integration_pid_updated') > self.last_run:
                 self.jira.api.issues.update(sql.jira_id,
                                             fields=task.fields,
-                                            priority=task.priority,
                                             )
             log.info(f'Found Task "{sql.jira_id}", '
                      'added to SQL Cache and updated.')
@@ -215,16 +213,14 @@ class Processor:
         # then create a new task and map it back into the sql cache.  Just like
         # above, we will then return the jira issue id to the caller.
         if len(page.issues) == 0:
-            resp = self.jira.api.issues.create(fields=task.fields,
-                                               priority=task.priority,
-                                               )
+            resp = self.jira.api.issues.create(fields=task.fields)
             sql = TaskMap(plugin_id=task.fields[self.plugin_id],
-                          jira_id=resp.id,
+                          jira_id=resp.key,
                           updated=datetime.now()
                           )
             s.add(sql)
             s.commit()
-            log.info(f'Created Task "{resp.id}" and added to SQL Cache.')
+            log.info(f'Created Task "{resp.key}" and added to SQL Cache.')
             return resp.id
 
         # In the event that multiple tasks are returned from the search,
@@ -240,7 +236,7 @@ class Processor:
 
     def upsert_subtask(self,
                        s: Session,
-                       task_id: (int | None),
+                       task_id: (str | None),
                        finding: dict
                        ) -> (int | None):
         """
@@ -266,7 +262,6 @@ class Processor:
             else:
                 self.jira.api.issues.update(sql.jira_id,
                                             fields=task.fields,
-                                            priority=task.priority,
                                             )
                 action = 'updated subtask'
             log.info(f'Matched SubTask "{sql.jira_id}" to '
@@ -300,7 +295,7 @@ class Processor:
                 sql = SubTaskMap(plugin_id=task.fields[self.plugin_id],
                                  asset_id=task.fields[self.asset_id],
                                  finding_id=task.fields[self.finding_id],
-                                 jira_id=page.issues[0].id,
+                                 jira_id=page.issues[0].key,
                                  is_open=task.is_open,
                                  updated=datetime.now(),
                                  )
@@ -309,7 +304,6 @@ class Processor:
                 if task.is_open:
                     self.jira.api.issues.update(sql.jira_id,
                                                 fields=task.fields,
-                                                priority=task.priority,
                                                 )
                     action = 'updated subtask'
                 else:
@@ -329,13 +323,13 @@ class Processor:
                     sql = SubTaskMap(plugin_id=task.fields[self.plugin_id],
                                      asset_id=task.fields[self.asset_id][0],
                                      finding_id=task.fields[self.finding_id],
-                                     jira_id=resp.id,
+                                     jira_id=resp.key,
                                      is_open=task.is_open,
                                      updated=datetime.now(),
                                      )
                     s.add(sql)
                     s.commit()
-                    log.info(f'Created Subtask "{resp.id}" and '
+                    log.info(f'Created Subtask "{resp.key}" and '
                              'added to SQL Cache.'
                              )
                     return resp.id

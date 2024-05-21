@@ -15,7 +15,7 @@ class TaskMap(Base):
     plugin_id: Mapped[int] = mapped_column(primary_key=True,
                                            sqlite_on_conflict_unique='IGNORE'
                                            )
-    jira_id: Mapped[int]
+    jira_id: Mapped[str]
     updated: Mapped[datetime]
     subtasks: Mapped[List["SubTaskMap"]] = relationship(
         back_populates="task", cascade="all, delete-orphan"
@@ -28,7 +28,7 @@ class SubTaskMap(Base):
                                              sqlite_on_conflict_unique='IGNORE'
                                              )
     asset_id: Mapped[UUID]
-    jira_id: Mapped[int]
+    jira_key: Mapped[str]
     plugin_id: Mapped[int] = mapped_column(ForeignKey('task.plugin_id'))
     is_open: Mapped[bool]
     updated: Mapped[datetime]
@@ -37,14 +37,14 @@ class SubTaskMap(Base):
     def __init__(self,
                  finding_id: str,
                  asset_id: str,
-                 jira_id: int,
+                 jira_id: str,
                  plugin_id: int,
                  is_open: bool = True,
                  **kwargs,
                  ):
         self.finding_id = UUID(finding_id)
         self.asset_id = UUID(asset_id)
-        self.jira_id = int(jira_id)
+        self.jira_id = str(jira_id)
         self.plugin_id = int(plugin_id)
         self.is_open = bool(is_open)
         super().__init__(**kwargs)
