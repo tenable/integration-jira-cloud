@@ -28,7 +28,7 @@ class SubTaskMap(Base):
                                              sqlite_on_conflict_unique='IGNORE'
                                              )
     asset_id: Mapped[UUID]
-    jira_key: Mapped[str]
+    jira_id: Mapped[str]
     plugin_id: Mapped[int] = mapped_column(ForeignKey('task.plugin_id'))
     is_open: Mapped[bool]
     updated: Mapped[datetime]

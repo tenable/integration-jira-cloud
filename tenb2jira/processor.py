@@ -155,8 +155,8 @@ class Processor:
         # If the finding related to this task is not in an open state, then
         # there is no reason to continue.  Return back a NoneType value.
         if not task.is_open:
-            log.info(f'Finding related to Task {task.fields[self.plugin_id]} '
-                     'is closed, skipping'
+            log.info(f'Finding related to Plugin {task.fields[self.plugin_id]}'
+                     ' is closed, skipping'
                      )
             return None
 
@@ -221,7 +221,7 @@ class Processor:
             s.add(sql)
             s.commit()
             log.info(f'Created Task "{resp.key}" and added to SQL Cache.')
-            return resp.id
+            return resp.key
 
         # In the event that multiple tasks are returned from the search,
         # something went seriously wrong.  We will log to the console, then
@@ -245,7 +245,7 @@ class Processor:
         associated action.
         """
         task = self.jira.subtask.generate(finding)
-        task.fields['parent'] = {'id': str(task_id)}
+        task.fields['parent'] = {'key': str(task_id)}
         sql = s.query(SubTaskMap)\
                .filter_by(finding_id=UUID(task.fields[self.finding_id]))\
                .one_or_none()
@@ -293,7 +293,7 @@ class Processor:
             # return the Jira issue id back to the caller.
             case 1:
                 sql = SubTaskMap(plugin_id=task.fields[self.plugin_id],
-                                 asset_id=task.fields[self.asset_id],
+                                 asset_id=task.fields[self.asset_id][0],
                                  finding_id=task.fields[self.finding_id],
                                  jira_id=page.issues[0].key,
                                  is_open=task.is_open,
@@ -332,7 +332,7 @@ class Processor:
                     log.info(f'Created Subtask "{resp.key}" and '
                              'added to SQL Cache.'
                              )
-                    return resp.id
+                    return resp.key
 
             # In the event that multiple tasks are returned from the
             # search, something went seriously wrong.  We will log to the
@@ -342,6 +342,7 @@ class Processor:
                 msg = ('Multiple Jira SubTasks match Finding '
                        f'"{task.fields[self.finding_id]}".  Jira IDs are '
                        f'"{", ".join(i.key for i in page.issues)}".'
+                       '  SKIPPING.'
                        )
                 log.error(msg)
                 raise Exception(msg)
@@ -396,6 +397,7 @@ class Processor:
         with Session(self.engine) as session:
             task_id = self.upsert_task(s=session, finding=finding)
             self.upsert_subtask(s=session, task_id=task_id, finding=finding)
+            session.commit()
 
     def sync(self):
         """
@@ -411,11 +413,40 @@ class Processor:
         # build the db cache
         self.build_cache()
 
-        # Using as many threads as we need (up to the max configured)
-        # go ahead and process the findings.
-        with ThreadPoolExecutor(max_workers=self.max_workers) as e:
+        # If only a single thread was set, then we wont even run through a
+        # threaded execution worker.
+        if self.max_workers <= 1:
             for finding in findings:
-                e.submit(self.finding_job, finding)
+                self.finding_job(finding)
+
+        # Using as many threads as we need (up to the max configured)
+        # go ahead and process the findings.  We will store the job results
+        # and confirm that no exceptions had occurred.  if any did, then we'll
+        # raise those exceptions and refuse to continue with closing any issues
+        # to ensure that we don't put the project into a weird state.
+        else:
+            jobs = []
+            exc_count = 0
+
+            # launch the threat executor and store each future job for later
+            # analysis.
+            with ThreadPoolExecutor(max_workers=self.max_workers) as e:
+                for finding in findings:
+                    jobs.append(e.submit(self.finding_job, finding))
+
+            # Check each job to see if any exceptions were raised.  If so, then
+            # log those exceptions and increment the exception counter.
+            for job in jobs:
+                if job.exception():
+                    log.exception(job.exception())
+                    exc_count += 1
+
+            # If we have a non-zero value from the exception counter, then
+            # log the total number of exceptions encountered and terminate.
+            if exc_count > 0:
+                log.error(f'Refusing to continue ({exc_count} errors) '
+                          '& terminating sync.')
+                return
 
         # cleanup the dead hosts and clear out the empty tasks.
         self.close_dead_assets(asset_cleanup)
