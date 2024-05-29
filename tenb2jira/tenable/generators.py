@@ -1,14 +1,15 @@
-import typing
+from typing import TYPE_CHECKING, Generator, Optional, Any
 import arrow
 from restfly.utils import dict_flatten, dict_merge
 import uuid
 
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
     from tenable.io.exports.iterator import ExportsIterator
     from tenable.sc.analysis import AnalysisResultsIterator
 
 
-def tvm_asset_cleanup(*assets_iters: 'ExportsIterator') -> dict:
+def tvm_asset_cleanup(*assets_iters: 'ExportsIterator'
+                      ) -> Generator[Any, Any, Any]:
     """
     A simple wrapper to coalesce the multiple terminated asset states within
     TVM.
@@ -26,8 +27,9 @@ def tvm_asset_cleanup(*assets_iters: 'ExportsIterator') -> dict:
 
 def tvm_merged_data(assets_iter: 'ExportsIterator',
                     vulns_iter: 'ExportsIterator',
-                    asset_fields: list[str] = None
-                    ) -> dict:
+                    asset_fields: Optional[list[str]] = None,
+                    close_accepted: bool = True,
+                    ) -> Generator[Any, Any, Any]:
     """
     Merges the asset and vulnerability finding data together into a single
     object and adds in a computed finding id based on the following attributes:
@@ -86,11 +88,19 @@ def tvm_merged_data(assets_iter: 'ExportsIterator',
                               ))
         f['integration_pid_updated'] = pid
 
+        # If accepted risks shoudl be flagged as closed, then we will replace
+        # the state field with "fixed" if the risk was indeed accepted.
+        sevmod = f.get('severity_modification_type')
+        if close_accepted and sevmod == 'ACCEPTED':
+            f['state'] = 'FIXED'
+
         # Return the augmented finding to the caller.
         yield f
 
 
-def tsc_merged_data(*vuln_iters: 'AnalysisResultsIterator') -> dict:
+def tsc_merged_data(*vuln_iters: 'AnalysisResultsIterator',
+                    close_accepted: bool = True,
+                    ) -> Generator[Any, Any, Any]:
     """
     Flattens and extends the vulnerability results returned from the
     Security Center analysis API.  The following fields are added to the
@@ -124,7 +134,9 @@ def tsc_merged_data(*vuln_iters: 'AnalysisResultsIterator') -> dict:
             # If the hasBeenMitigated flag was flipped, then the finding isn't
             # open, but is reopened.  We want to confer state accurately so we
             # will check that here.
-            if f['hasBeenMitigated'] == '1' and state == 'open':
+            if close_accepted and f['acceptRisk'] == '1':
+                f['integration_state'] = 'fixed'
+            elif f['hasBeenMitigated'] == '1' and state == 'open':
                 f['integration_state'] = 'reopened'
             else:
                 f['integration_state'] = state

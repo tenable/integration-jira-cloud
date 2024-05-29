@@ -158,6 +158,31 @@ def test_tvm_merged_data(tvm_assets, tvm_finding):
     assert finding['asset.test'] == 'value'
 
 
+@responses.activate
+def test_tvm_merged_data_accepted(tvm_assets, tvm_finding):
+    pmoddate = arrow.get('2020-04-27T00:00:00Z')
+    test_uuid = UUID('dd13a88d-2fbf-3d2a-930f-38fdc850f86d')
+    responses.get('https://cloud.tenable.com/assets/export/0/status',
+                  json={'status': 'FINISHED', 'available_chunks': []})
+    tvm = TenableIO(access_key='None', secret_key='None')
+    asset_iter = ExportsIterator(tvm)
+    asset_iter.uuid = 0
+    asset_iter.type = 'assets'
+    asset_iter.page = tvm_assets
+    tvm_finding['severity_modification_type'] = 'ACCEPTED'
+    finding_iter = ExportsIterator(tvm)
+    finding_iter.page = [tvm_finding for _ in range(100)]
+    tvm_generator = tvm_merged_data(assets_iter=asset_iter,
+                                    vulns_iter=finding_iter,
+                                    close_accepted=True,
+                                    )
+    finding = next(tvm_generator)
+    assert finding['state'] == 'FIXED'
+    assert finding['asset.uuid'] == '7f68f334-17ba-4ba0-b057-b77ddd783e60'
+    assert finding['integration_finding_id'] == test_uuid
+    assert finding['integration_pid_updated'] == pmoddate
+
+
 def test_tsc_merged_data(tsc_finding):
     test_uuid = UUID('d90cdab5-b745-3e7e-9268-aa0f445ed924')
     fuuid = UUID('bd371510-001f-3c13-86f4-20883ef0cd09')
@@ -184,3 +209,13 @@ def test_tsc_merged_data(tsc_finding):
     tsc_generator = tsc_merged_data(findings)
     finding = next(tsc_generator)
     assert finding['integration_state'] == 'fixed'
+
+    tsc_finding['acceptRisk'] = '1'
+    findings = AnalysisResultsIterator(None)
+    findings.page = [tsc_finding for _ in range(100)]
+    findings._query = {'sourceType': 'cumulative'}
+    tsc_generator = tsc_merged_data(findings)
+    finding = next(tsc_generator)
+    assert finding['integration_state'] == 'fixed'
+
+

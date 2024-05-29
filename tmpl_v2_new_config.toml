@@ -57,6 +57,9 @@ tsc_page_size   = 1000
 # Management.  You may need to adjust this number based on memory restrictions.
 tvm_chunk_size  = 1000
 
+# Should accepted risks be treated as closed findings?
+fix_accepted_risks = true
+
 # The names of the platforms to be relayed to Jira for the "Tenable Platform"
 # field.  Generally it's best to leave these values alone.
 platforms.tvm   = "Tenable Vulnerability Management"

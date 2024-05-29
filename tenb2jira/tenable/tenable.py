@@ -1,4 +1,4 @@
-from typing import Generator
+from typing import Generator, Any
 import arrow
 from tenable.io import TenableIO
 from tenable.sc import TenableSC
@@ -14,6 +14,7 @@ class Tenable:
     platform: str
     timestamp: int
     age: int
+    close_accepted: bool
     severity: list[str]
     chunk_size: int = 1000
     page_size: int = 1000
@@ -29,6 +30,9 @@ class Tenable:
         self.chunk_size = self.config['tenable']['tvm_chunk_size']
         self.page_size = self.config['tenable']['tsc_page_size']
         self.query_id = self.config['tenable'].get('tsc_query_id')
+        self.close_accepted = self.config['tenable'].get('fix_accepted_risks',
+                                                         True
+                                                         )
 
         if not self.timestamp:
             self.timestamp = int(arrow.now()
@@ -53,7 +57,7 @@ class Tenable:
                                  )
 
     def get_generator(self) -> Generator:
-        self.last_run = arrow.now().timestamp()
+        self.last_run = int(arrow.now().timestamp())
         if self.platform == 'tvm':
             assets = self.tvm.exports.assets(updated_at=self.timestamp,
                                              chunk_size=self.chunk_size
@@ -62,9 +66,12 @@ class Tenable:
                                            severity=self.severity,
                                            state=['open', 'reopened', 'fixed'],
                                            include_unlicensed=True,
-                                           num_assets=self.chunk_size
+                                           num_assets=self.chunk_size,
                                            )
-            return tvm_merged_data(assets, vulns)
+            return tvm_merged_data(assets,
+                                   vulns,
+                                   close_accepted=self.close_accepted,
+                                   )
         if self.platform == 'tsc':
             sevmap = {
                 'info': '0',
@@ -87,9 +94,12 @@ class Tenable:
                                               query_id=self.query_id,
                                               limit=self.page_size
                                               )
-            return tsc_merged_data(cumulative, patched)
+            return tsc_merged_data(cumulative,
+                                   patched,
+                                   close_accepted=self.close_accepted,
+                                   )
 
-    def get_asset_cleanup(self) -> Generator:
+    def get_asset_cleanup(self) -> (Generator[Any, Any, Any] | list):
         if self.platform == 'tvm':
             dassets = self.tvm.exports.assets(deleted_at=self.timestamp,
                                               chunk_size=self.chunk_size
@@ -98,7 +108,5 @@ class Tenable:
                                               chunk_size=self.chunk_size
                                               )
             return tvm_asset_cleanup(dassets, tassets)
-        if self.platform == 'tsc':
+        else:
             return []
-
-
