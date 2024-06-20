@@ -103,7 +103,7 @@ def validate(configfile: Path):
 @app.command()
 def build(configfile: Path,
           update: bool = True,
-          verbose: bool = False
+          verbose: bool = False,
           ):
     """
     Runs the initial configuration for the Jira project.
@@ -126,7 +126,9 @@ def build(configfile: Path,
 @app.command()
 def sync(configfile: Path,
          update: bool = True,
-         verbose: bool = False
+         verbose: bool = False,
+         cleanup: bool = True,
+         ignore_last_run: bool = False,
          ):
     """
     Perform the sync between Tenable & Jira
@@ -134,12 +136,12 @@ def sync(configfile: Path,
     setup_logging(verbose)
     with configfile.open('r', encoding='utf-8') as fobj:
         config = tomlkit.load(fobj)
-    processor = Processor(config)
+    processor = Processor(config, ignore_last_run=ignore_last_run)
     console.print(Columns([tenable_table(config),
                            jira_table(config)
                            ]))
     console.print(field_definition_table(processor.jira))
-    processor.sync()
+    processor.sync(cleanup=cleanup)
     if update:
         with open(configfile, 'w', encoding='utf-8') as f:
             tomlkit.dump(config, f)

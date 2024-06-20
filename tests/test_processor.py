@@ -1,3 +1,4 @@
+from copy import copy
 import pytest
 import responses
 from responses import matchers
@@ -63,6 +64,67 @@ def processor(example_config):
                   })
     return Processor(example_config)
 
+
+@responses.activate
+def test_ignore_last_run(example_config):
+    responses.get('https://not-jira/rest/api/3/project/VULN',
+                  json={}
+                  )
+    responses.get('https://not-jira/rest/api/3/screens',
+                  json={'values': [{'id': 1}], 'total': 1}
+                  )
+    responses.get('https://not-jira/rest/api/3/screens/1/tabs',
+                  json=[
+                      {'name': 'Vulnerability', 'id': 1},
+                      {'name': 'Asset', 'id': 1}
+                  ]
+                  )
+    responses.post('https://not-jira/rest/api/3/screens/1/tabs',
+                   json={'id': 1}
+                   )
+    responses.post('https://not-jira/rest/api/3/screens/1/tabs/1/fields')
+    responses.get('https://not-jira/rest/api/3/screens/1/tabs/1/fields',
+                  json=[
+                      {'id': 'customfield_1'},
+                      {'id': 'customfield_2'},
+                      {'id': 'customfield_3'},
+                      {'id': 'customfield_4'},
+                      {'id': 'customfield_5'},
+                      {'id': 'customfield_6'},
+                      {'id': 'customfield_7'},
+                      {'id': 'customfield_8'},
+                      {'id': 'customfield_9'},
+                      {'id': 'customfield_10'},
+                      {'id': 'customfield_11'},
+                      {'id': 'customfield_12'},
+                      {'id': 'customfield_13'},
+                      {'id': 'customfield_14'},
+                      {'id': 'customfield_15'},
+                      {'id': 'customfield_16'},
+                      {'id': 'customfield_17'},
+                      {'id': 'customfield_18'},
+                      {'id': 'customfield_19'},
+                      {'id': 'customfield_20'},
+                      {'id': 'customfield_21'},
+                      {'id': 'customfield_22'},
+                      {'id': 'customfield_23'},
+                      {'id': 'customfield_24'},
+                      {'id': 'customfield_25'},
+                      {'id': 'customfield_26'},
+                      {'id': 'customfield_27'},
+                      {'id': 'customfield_28'},
+                      {'id': 'customfield_29'},
+                      {'id': 'customfield_30'},
+                  ])
+    responses.get('https://not-tenb/rest/system',
+                  json={
+                      'error_code': None,
+                      'response': {}
+                  })
+    last_run_config = copy(example_config)
+    last_run_config['tenable']['last_run'] = 1234567890
+    p = Processor(last_run_config, ignore_last_run=True)
+    assert p.config == example_config
 
 def test_init(processor, example_config):
     assert processor.config == example_config
