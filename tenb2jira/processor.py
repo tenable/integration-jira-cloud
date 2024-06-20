@@ -29,8 +29,15 @@ class Processor:
     plugin_id: str
     closed_map: list[str]
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict, ignore_last_run: bool = False):
         dburi = f'sqlite:///{config["mapping_database"].get("path")}'
+
+        # For situations where we will need to ignore the last_run variable,
+        # This will pull it from the config, forcing the integration to use
+        # the vuln_age attribute that is used in the initial run.
+        if ignore_last_run and 'last_run' in config['tenable']:
+            config['tenable'].pop('last_run')
+
         self.last_run = arrow.get(config['tenable'].get('last_run', 0))
         self.config = config
         self.jira = Jira(config)
@@ -399,7 +406,7 @@ class Processor:
             self.upsert_subtask(s=session, task_id=task_id, finding=finding)
             session.commit()
 
-    def sync(self):
+    def sync(self, cleanup: bool = True):
         """
         Tenable to Jira Synchronization method.
         """
@@ -458,5 +465,6 @@ class Processor:
 
         self.engine.dispose()
         # Delete the mapping database.
-        with Path(self.config["mapping_database"].get("path")) as p:
-            p.unlink()
+        if cleanup:
+            with Path(self.config["mapping_database"].get("path")) as p:
+                p.unlink()
