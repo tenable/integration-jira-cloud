@@ -40,7 +40,7 @@ def tenable_table(config: dict) -> Table:
     table.add_row('Secret key', f'{skey[:4]}...{skey[-4:]}')
     if platform == 'tsc':
         table.add_row('Security Center URL', config['tenable']['url'])
-        table.add_row('Page Size', config['tenable']['tsc_page_size'])
+        table.add_row('Page Size', str(config['tenable']['tsc_page_size']))
     elif platform == 'tvm':
         table.add_row('TVM URL', config['tenable']['url'])
         table.add_row('Export Chunk Size',
