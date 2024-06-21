@@ -145,6 +145,18 @@ def test_field_parse_value_datetime(field_config):
     assert f.parse_value({'test': '2024-04-06T15:51:42+00:00'}) == test_resp
 
 
+def test_field_parse_value_datepicker(field_config):
+    f = Field(config=field_config,
+              platform='tvm',
+              platform_map={'tvm': 'Test Platform'}
+              )
+    f.type = 'datepicker'
+    test_resp = '2024-04-06'
+    assert f.parse_value({'test': 1712418702}) == test_resp
+    assert f.parse_value({'test': '1712418702'}) == test_resp
+    assert f.parse_value({'test': '2024-04-06T15:51:42+00:00'}) == test_resp
+
+
 def test_field_parse_value_fallthrough(field_config):
     f = Field(config=field_config,
               platform='tvm',

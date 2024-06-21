@@ -6,6 +6,7 @@ from .api.session import JiraAPI
 
 
 DATETIME_FMT = 'YYYY-MM-DDTHH:mm:ss.SSSZ'
+DATE_FMT = 'YYYY-MM-DD'
 
 
 class Field:
@@ -167,6 +168,17 @@ class Field:
                     return arrow.get(value).format(DATETIME_FMT)
                 except arrow.parser.ParserError:
                     return arrow.get(int(value)).format(DATETIME_FMT)
+
+            # datepicker values should be returned in a specific format.  Here
+            # we attempt to normalize both timestamp and ISO formatted values
+            # info the Jira-specified format.
+            case 'datepicker':
+                if value is None:
+                    return None
+                try:
+                    return arrow.get(value).format(DATE_FMT)
+                except arrow.parser.ParserError:
+                    return arrow.get(int(value)).format(DATE_FMT)
 
             # For any other value types, we will just bass the value back
             # exactly as we retrieved it.
