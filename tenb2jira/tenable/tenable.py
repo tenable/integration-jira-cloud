@@ -82,17 +82,24 @@ class Tenable:
             }
             tsc_ts = f'{self.timestamp}-{self.last_run}'
             sevfilter = ','.join([sevmap[s] for s in self.severity])
+            params = {
+                'source': 'cumulative',
+                'limit': self.page_size
+            }
+            if self.query_id:
+                params['query_id'] = self.query_id
+
+            # Get the cumulative results
             cumulative = self.tsc.analysis.vulns(('severity', '=', sevfilter),
                                                  ('lastSeen', '=', tsc_ts),
-                                                 source='cumulative',
-                                                 query_id=self.query_id,
-                                                 limit=self.page_size
+                                                 **params
                                                  )
+
+            # Get the patched results
+            params['source'] = 'patched'
             patched = self.tsc.analysis.vulns(('severity', '=', sevfilter),
                                               ('lastMitigated', '=', tsc_ts),
-                                              source='patched',
-                                              query_id=self.query_id,
-                                              limit=self.page_size
+                                              **params
                                               )
             return tsc_merged_data(cumulative,
                                    patched,
