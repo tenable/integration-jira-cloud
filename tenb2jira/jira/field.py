@@ -146,13 +146,12 @@ class Field:
             # a string by comma, or simply recast the list into a list of
             # strings should we get a list.
             case 'labels':
-                if isinstance(value, str):
-                    return [v.strip() for v in value.split(',')]
                 if isinstance(value, list):
                     return [str(i) for i in value]
-                if value is None:
+                elif value is None:
                     return []
-                raise TypeError(f'Value {value} is not a string or list')
+                else:
+                    return [v.strip() for v in str(value).split(',')]
 
             # float values should always be returned as a float.
             case 'float':

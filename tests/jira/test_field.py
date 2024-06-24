@@ -1,3 +1,4 @@
+import uuid
 import pytest
 import responses
 from tenb2jira.jira.field import Field
@@ -118,8 +119,9 @@ def test_field_parse_value_labels(field_config):
     f.type = 'labels'
     assert f.parse_value({'test': ['val1', 'val2']}) == ['val1', 'val2']
     assert f.parse_value({'test': 'val1, val2'}) == ['val1', 'val2']
-    with pytest.raises(TypeError):
-        f.parse_value({'test': {'val1': 'val2'}})
+    assert f.parse_value({'test': 1}) == ['1']
+    test_uuid = uuid.uuid4()
+    assert f.parse_value({'test': test_uuid}) == [str(test_uuid)]
 
 
 def test_field_parse_value_float(field_config):

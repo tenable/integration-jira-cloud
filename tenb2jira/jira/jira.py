@@ -1,4 +1,5 @@
 from typing import Any
+import time
 import logging
 from restfly.errors import NotFoundError
 from .field import Field
@@ -117,6 +118,17 @@ class Jira:
                 projectTemplateKey=config['template_key'],
                 projectTypeKey=config['type_key']
             )
+            # if the jira API is behaving slow, then we will keep trying to
+            # query the project get API until we have
+            counter = 0
+            while project.get('issueTypes') is None:
+                counter += 1
+                time.sleep(1)
+                project = j.projects.get(config['key'])
+                if counter > 10:
+                    raise ValueError('Jira has not reponded with an '
+                                     'appropriate project definition.'
+                                     )
         self.project = project
 
     def build_screens(self):

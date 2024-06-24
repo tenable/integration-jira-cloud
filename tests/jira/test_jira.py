@@ -2,6 +2,7 @@ import logging
 import pytest
 import responses
 from responses import matchers
+from responses.registries import OrderedRegistry
 from box import Box
 from tenb2jira.jira.jira import Jira
 from tenb2jira.jira.field import Field
@@ -112,7 +113,7 @@ def test_jira_init(jira_config):
     assert jira.config == jira_config
 
 
-@responses.activate
+@responses.activate(registry=OrderedRegistry)
 def test_jira_get_project(jira_config):
     responses.get('https://nourl/rest/api/3/project/VULN',
                   json={'id': 1})
@@ -122,8 +123,14 @@ def test_jira_get_project(jira_config):
     responses.get('https://nourl/rest/api/3/project/VULN',
                   status=404)
     responses.post('https://nourl/rest/api/3/project', json={'id': 2})
+    responses.get('https://nourl/rest/api/3/project/VULN',
+                  status=200,
+                  json={'id': 2,
+                        'issueTypes': [],
+                        }
+                  )
     jira.get_project()
-    assert jira.project == {'id': 2}
+    assert jira.project == {'id': 2, 'issueTypes': []}
 
 
 def test_jira_build_fields(jira_config):
