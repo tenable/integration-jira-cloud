@@ -259,7 +259,7 @@ attr  = "solution"
 
 [[jira.subtask.description.tsc]]
 name    = "Output"
-attr  = "pluginOutput"
+attr  = "pluginText"
 
 
 ### Jira Custom Field Declarations
@@ -396,7 +396,7 @@ type        = "labels"
 searcher    = "labelsearcher"
 task_types  = ["subtask"]
 attr.tvm    = "asset.ipv4"
-attr.tsc    = "asset.ip"
+attr.tsc    = "ip"
 
 [[jira.fields]]
 name        = "Device IPv6 Addresses"
