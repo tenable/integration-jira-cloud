@@ -114,6 +114,7 @@ severity_map.critical   = 1
 severity_map.high       = 2
 severity_map.medium     = 3
 severity_map.low        = 4
+severity_map.info       = 5
 
 # The Tenable state to Jira open status mapping set here determines how we
 # associate the different tenable states to Jira's current issue status.  A
