@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 
 
 class JiraIterator(APIIterator):
-    limit = 1000
+    limit = 100
 
     def _get_page(self):
         params = self.params
@@ -24,7 +24,7 @@ class JiraIterator(APIIterator):
 def search_generator(api: 'JiraAPI',
                      jql: dict,
                      fields: list[str],
-                     limit: int = 1000
+                     limit: int = 100
                      ):
     query = {
        'jql': jql,
@@ -42,4 +42,4 @@ def search_generator(api: 'JiraAPI',
         page = api.issues.search(**query)
         page_counter += 1
         max_results = page.total
-        yield page.issues
+        yield page.issues, max_results, page_counter

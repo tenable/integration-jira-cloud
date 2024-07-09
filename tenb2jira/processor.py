@@ -93,7 +93,7 @@ class Processor:
                                model: Base,
                                fields: dict[str, str],
                                pk: str,
-                               limit: int = 1000
+                               limit: int = 100
                                ):
         """
         Queries Jira and builds the database cache based off of the results of
@@ -104,31 +104,40 @@ class Processor:
         jql = (f'project = "{key}" AND issuetype = "{issuetype}" '
                f'AND status not in ({cmap})'
                )
+        total = 0
         with Session(self.engine) as s:
-            for page in search_generator(api=self.jira.api,
-                                         jql=jql,
-                                         fields=list(fields.keys())
-                                         ):
+            for ptuple in search_generator(api=self.jira.api,
+                                           jql=jql,
+                                           fields=list(fields.keys()),
+                                           limit=limit
+                                           ):
+                page, total, pagenum = ptuple
+                log.debug(f'Processing page {pagenum}:{limit} of {total}')
                 issues = []
                 for issue in page:
                     item = {}
-                    skip = False
+                    missing = []
                     for key, value in issue.fields.items():
                         if value is None:
-                            skip = True
+                            missing.append(key)
                         if isinstance(value, list):
                             value = value[0]
                         item[fields[key]] = value
                     # item = {fields[k]: v for k, v in issue.fields.items()}
                     item['updated'] = self.start_time
                     item['jira_id'] = issue.key
-                    if not skip:
+                    if not missing:
+                        log.debug(f'Adding {issue.key} to cache.')
                         issues.append(model(**item).asdict())
+                    else:
+                        log.debug(f'Skipping {issue.key} '
+                                  f'for missing {missing}')
                 if issues:
                     stmt = insert(model).values(issues)\
                                         .prefix_with('OR IGNORE')
                     s.execute(stmt)
                     s.commit()
+            log.debug(f'SQLCache for {model} is {s.query(model).count()} of {total}')
 
     def build_cache(self):
         """
@@ -445,7 +454,7 @@ class Processor:
             # log those exceptions and increment the exception counter.
             for job in jobs:
                 if job.exception():
-                    log.exception(job.exception())
+                    log.exception(job.exception(), stack_info=True)
                     exc_count += 1
 
             # If we have a non-zero value from the exception counter, then
