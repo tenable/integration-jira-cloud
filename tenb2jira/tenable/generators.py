@@ -155,7 +155,7 @@ def tsc_merged_data(*vuln_iters: 'AnalysisResultsIterator',
             astr = ':'.join([f'{f[i]}' for i in uniqa])
             f['asset.uuid'] = uuid.uuid3(uuid.NAMESPACE_DNS, astr)
             f['integration_finding_id'] = uuid.uuid3(uuid.NAMESPACE_DNS, fstr)
-            f['integration_pid_updated'] = arrow.get(int(f.get('pluginModDate')))
+            f['integration_pid_updated'] = arrow.get(int(f.get('pluginModDate', 0)))
 
             # Return the augmented finding to the caller.
             yield f
