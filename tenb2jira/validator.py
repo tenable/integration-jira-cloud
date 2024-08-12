@@ -13,6 +13,7 @@ class Severity(str, Enum):
     high = 'high'
     medium = 'medium'
     low = 'low'
+    info = 'info'
 
 
 class TaskType(str, Enum):
