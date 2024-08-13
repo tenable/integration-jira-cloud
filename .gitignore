@@ -5,3 +5,5 @@ __pycache__
 .coverage
 *.egg-info
 /dist
+/mapping.db
+/base_config_tsc.toml
