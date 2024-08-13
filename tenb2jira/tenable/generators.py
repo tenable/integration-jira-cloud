@@ -124,7 +124,7 @@ def tsc_merged_data(*vuln_iters: 'AnalysisResultsIterator',
     state_map = {'cumulative': 'open', 'patched': 'fixed'}
 
     for vuln_iter in vuln_iters:
-        # For this iterator, pull the sourcetpye from the embedded query and
+        # For this iterator, pull the sourcetype from the embedded query and
         # store the state mapping.
         state = state_map[vuln_iter._query['sourceType']]
         for finding in vuln_iter:
@@ -155,7 +155,12 @@ def tsc_merged_data(*vuln_iters: 'AnalysisResultsIterator',
             astr = ':'.join([f'{f[i]}' for i in uniqa])
             f['asset.uuid'] = uuid.uuid3(uuid.NAMESPACE_DNS, astr)
             f['integration_finding_id'] = uuid.uuid3(uuid.NAMESPACE_DNS, fstr)
-            f['integration_pid_updated'] = arrow.get(int(f.get('pluginModDate', 0)))
+
+            if f.get('pluginModDate') == '':
+                f['integration_pid_updated'] = arrow.get(0)
+            else:
+                mod_date = arrow.get(int(f.get('pluginModDate')))
+                f['integration_pid_updated'] = mod_date
 
             # Return the augmented finding to the caller.
             yield f
