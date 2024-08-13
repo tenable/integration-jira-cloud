@@ -170,8 +170,7 @@ def test_jira_build_tasks(jira_config):
 
 @responses.activate
 def test_jira_setup(jira_config, caplog):
-    responses.get('https://nourl/rest/api/3/project/VULN',
-      json={'id': 1})
+    responses.get('https://nourl/rest/api/3/project/VULN', json={'id': 1})
     responses.get('https://nourl/rest/api/3/screens',
                   match=[
                       matchers.query_param_matcher({
@@ -213,3 +212,52 @@ def test_jira_setup(jira_config, caplog):
     ]
     for line in event_check:
         assert line in caplog.text
+
+
+@responses.activate
+def test_jira_setup_config_screens(jira_config):
+    responses.get('https://nourl/rest/api/3/project/VULN', json={'id': 1})
+    responses.get('https://nourl/rest/api/3/screens/1/tabs',
+                  json=[{'name': 'Test', 'id': 100}]
+                  )
+    responses.post('https://nourl/rest/api/3/screens/1/tabs',
+                   json={'id': 101}
+                   )
+    responses.get('https://nourl/rest/api/3/screens/1/tabs/100/fields',
+                  json=[{'id': 'customfield_1'},
+                        {'id': 'customfield_2'},
+                        ]
+                  )
+    responses.post('https://nourl/rest/api/3/screens/1/tabs/100/fields',
+                   match=[
+                       matchers.json_params_matcher({'fieldId': 'customfield_3'})
+                   ]
+                   )
+    responses.post('https://nourl/rest/api/3/screens/1/tabs/101/fields',
+                   match=[
+                       matchers.json_params_matcher({'fieldId': 'customfield_4'})
+                   ]
+                   )
+    jira_config['jira']['screens'] = [1]
+    jira = Jira(jira_config)
+    jira.setup()
+
+
+@responses.activate
+def test_jira_setup_no_screen_management(jira_config):
+    responses.get('https://nourl/rest/api/3/project/VULN', json={'id': 1})
+    jira_config['jira']['manage_screens'] = False
+    jira = Jira(jira_config)
+    jira.setup()
+
+
+@responses.activate(registry=OrderedRegistry)
+def test_jira_response_fail(jira_config, caplog):
+    responses.get('https://nourl/rest/api/3/project/VULN', status=404)
+    responses.post('https://nourl/rest/api/3/project', json={'id': 1})
+    for _ in range(11):
+        responses.get('https://nourl/rest/api/3/project/VULN', json={'id': 1})
+    with caplog.at_level(logging.DEBUG):
+        with pytest.raises(ValueError):
+            jira = Jira(jira_config)
+            jira.get_project()

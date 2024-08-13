@@ -130,9 +130,9 @@ def test_field_parse_value_float(field_config):
               platform_map={'tvm': 'Test Platform'}
               )
     f.type = 'float'
-    assert f.parse_value({'test': 1}) == 1.0
-    assert f.parse_value({'test': 1.0}) == 1.0
-    assert f.parse_value({'test': '1'}) == 1.0
+    assert f.parse_value({'test': 1}) == '1.0'
+    assert f.parse_value({'test': 1.0}) == '1.0'
+    assert f.parse_value({'test': '1'}) == '1.0'
 
 
 def test_field_parse_value_datetime(field_config):
