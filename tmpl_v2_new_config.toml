@@ -189,7 +189,7 @@ attr  = "plugin.description"
 
 [[jira.task.description.tvm]]
 name    = "Solution"
-attr  = "solution"
+attr  = "plugin.solution"
 
 [[jira.task.description.tsc]]
 name    = "Description"
@@ -244,7 +244,7 @@ attr  = "plugin.description"
 
 [[jira.subtask.description.tvm]]
 name    = "Solution"
-attr  = "solution"
+attr  = "plugin.solution"
 
 [[jira.subtask.description.tvm]]
 name    = "Output"
@@ -437,7 +437,7 @@ screen_tab  = "Vulnerability"
 type        = "labels"
 searcher    = "labelsearcher"
 task_types  = ["task"]
-attr.tvm    = "pluvin.cve"
+attr.tvm    = "plugin.cve"
 attr.tsc    = "cve"
 
 [[jira.fields]]
