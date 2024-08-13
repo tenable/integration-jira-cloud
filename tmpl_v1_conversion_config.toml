@@ -40,6 +40,14 @@ url             = "https://cloud.tenable.com"
 # - "low"
 severities      = ["high", "critical"]
 
+# If you would also like to restrict the findings returned to be from a VPR
+# score of X or higher, then uncomment the field below and set appropriately.
+# NOTE:  As VPR scores can radically change over time, this may end up
+#        causing some findings to be "orphaned" if they drop below the
+#        specified threshold.  Long-term usage of this parameter is untested
+#        at the current juncture.
+#vpr_score       =
+
 # How old should we pull back initially to collect the data?  Expecting number
 # of calendar days.
 vuln_age        = 30
