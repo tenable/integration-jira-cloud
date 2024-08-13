@@ -437,7 +437,7 @@ screen_tab  = "Vulnerability"
 type        = "labels"
 searcher    = "labelsearcher"
 task_types  = ["task"]
-attr.tvm    = "pluvin.cve"
+attr.tvm    = "plugin.cve"
 attr.tsc    = "cve"
 
 [[jira.fields]]
