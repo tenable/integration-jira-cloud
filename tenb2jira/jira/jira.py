@@ -1,6 +1,7 @@
 from typing import Any
 import time
 import logging
+from box import Box
 from restfly.errors import NotFoundError
 from .field import Field
 from .task import Task
@@ -140,13 +141,19 @@ class Jira:
         # If manage screens to set to false, then we don't actually want to
         # do anything here.  Just return to the caller.
         if not self.config['jira'].get('manage_screens', True):
-            return
+            return None
 
-        # Get the list of screens related to thsi project.  THe only way I have
+        # we will attempt to pre-populate the screens if the screen definition
+        # is enabled.
+        screens = [Box({'id': i})
+                   for i in self.config['jira'].get('screens', [])]
+
+        # Get the list of screens related to this project.  The only way I have
         # found to get the screens associated to a project via the Jira API is
         # to perform a screen search using the project key as part of the
         # search string.
-        screens = self.api.screens.search(queryString=f'{config["key"]}:')
+        if not screens:
+            screens = self.api.screens.search(queryString=f'{config["key"]}:')
         for screen in screens:
             # collect the tabs for the screen and then collect the fields that
             # are associated to that tab.
