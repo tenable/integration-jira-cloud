@@ -88,6 +88,7 @@ class Jira(BaseModel, use_enum_values=True):
     severity_map: Dict[Severity, int]
     project: JiraProject
     fields: List[JiraField]
+    screens: Optional[List[int]] = None
 
 
 class Tenable(BaseModel, use_enum_values=True):
@@ -126,7 +127,7 @@ def validate(config: dict) -> dict:
             The list of config errors observed.
     """
     try:
-        Configuration.parse_obj(config)
+        Configuration.model_validate(config)
     except ValidationError as e:
         return e.errors()
     return []
