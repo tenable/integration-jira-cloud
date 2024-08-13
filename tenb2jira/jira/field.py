@@ -129,6 +129,8 @@ class Field:
 
         # fetch the value using the defined attribute
         value = finding.get(self.attribute)
+        if not value or value == '':
+            return None
 
         # Next we will perform some formatting based on the expected values
         # that Jira expects in the API.
@@ -148,21 +150,17 @@ class Field:
             case 'labels':
                 if isinstance(value, list):
                     return [str(i) for i in value]
-                elif value is None:
-                    return []
                 else:
                     return [v.strip() for v in str(value).split(',')]
 
             # float values should always be returned as a float.
             case 'float':
-                return float(value) if value is not None else 0.0
+                return str(float(value))
 
             # datetime values should be returned in a specific format.  Here
             # we attempt to normalize both timestamp and ISO formatted values
             # info the Jira-specified format.
             case 'datetime':
-                if value is None:
-                    return None
                 try:
                     return arrow.get(value).format(DATETIME_FMT)
                 except arrow.parser.ParserError:
@@ -172,8 +170,6 @@ class Field:
             # we attempt to normalize both timestamp and ISO formatted values
             # info the Jira-specified format.
             case 'datepicker':
-                if value is None:
-                    return None
                 try:
                     return arrow.get(value).format(DATE_FMT)
                 except arrow.parser.ParserError:
@@ -199,7 +195,7 @@ class Field:
         # statement looking for any of the values.  If there is only a single
         # value, then we have to return a normal "contains" statement using
         # the only item in the list.
-        if isinstance(value, list):
+        if isinstance(value, list) and len(value) > 0:
             if len(value) > 1:
                 operator = 'in'
                 vals = [f'"{str(i)}"' for i in value]
