@@ -2,9 +2,11 @@ from typing import Generator
 import pytest
 import responses
 import arrow
+from responses.matchers import json_params_matcher
 from tenable.io import TenableIO
 from tenable.sc import TenableSC
 from tenb2jira.tenable.tenable import Tenable
+
 
 @pytest.fixture
 def tvm_config():
@@ -99,3 +101,55 @@ def test_get_generator(tvm, tsc):
         'error_code': None
     })
     assert isinstance(tsc.get_generator(), Generator)
+
+
+@responses.activate
+def test_get_tvm_generator(tvm):
+    last_run = int(arrow.now().shift(days=-30).floor('day').timestamp())
+    responses.post('https://nourl/assets/export', json={'export_uuid': 0})
+    responses.post('https://nourl/vulns/export',
+                   json={'export_uuid': 0},
+                   match=[json_params_matcher({
+                        'filters': {
+                            'since': last_run,
+                            'severity': ['medium', 'high', 'critical'],
+                            'state': ['open', 'reopened', 'fixed'],
+                            'vpr_score': {'gte': 6.1}
+                        },
+                        'include_unlicensed': True,
+                        'num_assets': 1000,
+                   })]
+                   )
+    tvm.vpr_score = 6.1
+    assert isinstance(tvm.get_tvm_generator(), Generator)
+
+
+@responses.activate
+def test_get_tsc_generator(tsc, tsc_finding):
+    now = int(arrow.now().timestamp())
+    responses.get('https://nourl/rest/query/1?fields=filters', json={
+        'response': {'query': {'filters': []}},
+        'error_code': None
+    })
+    responses.post('https://nourl/rest/analysis',
+                   json={'response': {'results': [tsc_finding]},'error_code': None},
+                   match=[json_params_matcher({
+                      'sourceType': 'cumulative',
+                      'type': 'vuln',
+                      'query': {
+                        'type': 'vuln',
+                        'tool': 'vulndetails',
+                        'startOffset': 0,
+                        'endOffset': 1000,
+                        'filters': [
+                            {'filterName': 'severity', 'operator': '=', 'value': '2,3,4'},
+                            {'filterName': 'vprScore', 'operator': '=', 'value': '6.1-10'},
+                            {'filterName': 'lastSeen', 'operator': '=', 'value': f'{tsc.timestamp}-{now}'}
+                        ]
+                    }
+                   })]
+                   )
+    tsc.vpr_score = 6.1
+    generator = tsc.get_tsc_generator()
+    assert isinstance(generator, Generator)
+    next(generator)

@@ -30,7 +30,7 @@ jobs:
           pytest tests                        \
             --cov-report term-missing         \
             --cov-report xml:cov/coverage.xml \
-            --cov=tenable tests
+            --cov=tenb2jira
       - name: Save Coverage Report
         uses: actions/upload-artifact@v2
         with:
