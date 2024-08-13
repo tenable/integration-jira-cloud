@@ -1,62 +1,197 @@
+# This is the configuration file for the Tenable-to-Jira integration.  This
+# configuration file follows the TOML standard, which should be easier to work
+# with instead of the older v1 YAML format, which had some error-prone issues
+# due to indentation requirements.  The structure of this file is also a bit
+# different than the v1 format, attempting to break the data down in a more
+# flexible and scalable way.
+#
+# One of the common conventions you will see in this file is the use of:
+#
+# - fieldname.tsc
+# - fieldname.tvm
+#
+# parameters within the configuration file.  Whenever you see this the field
+# is split to be Tenable platform-specific.  If you need to adjust one of those
+# values, be sure to adjust the one that appropriate to your platform.
+
+
+### Tenable parameters
 [tenable]
+# Which Tenable platform will we be interfacing with?
+# supported values are:
+# - "tvm" for Tenable Vulnerability Manager
+# - "tsc" for Tenable Security Center
 platform        = "tvm"
-access_key      = "abcd"
-secret_key      = "defg"
+
+# The API Access and Secret keys for the Tenable account.
+access_key      = "abcdef"
+secret_key      = "abcdef"
+
+# The URL to connect to.  If this is for Tenable Vulnerability Manager, then
+# the default of "https://cloud.tenable.com" is generally sufficient.  If this
+# is for a fedramp environment or for a Tenable Security Center environment,
+# then adjust this URL to point to the platform.
 url             = "https://not-tenb"
+
+# The vulnerability severities to pull.  Supported values are:
+# - "critical"
+# - "high"
+# - "medium"
+# - "low"
 severities      = ["high", "critical"]
+
+# How old should we pull back initially to collect the data?  Expecting number
+# of calendar days.
 vuln_age        = 30
-last_run        = 0
+
+# If interfacing into Tenable Security Center, you can pass a query Id instead
+# of relying on the severity setting above.  Using a query is generally
+# recommended for more granular control of what to pull from the platform.  To
+# set a query, uncomment the line and set the query id.
+#tsc_query_id    = 100000
+
+# The page size to use when collecting the results from Security Center
 tsc_page_size   = 1000
+
+# The chunk size to use when querying the results from Tenable Vulnerability
+# Management.  You may need to adjust this number based on memory restrictions.
 tvm_chunk_size  = 1000
+
+# Should accepted risks be treated as closed findings?
+fix_accepted_risks = true
+
+# The names of the platforms to be relayed to Jira for the "Tenable Platform"
+# field.  Generally it's best to leave these values alone.
 platforms.tvm   = "Tenable Vulnerability Management"
 platforms.tsc   = "Tenable Security Center"
+last_run        = 0
 
+
+### Mapping "Cache" database parameters
 [mapping_database]
-path    = "test_mapping.db"
+# This is the path to the map cache database.  This database is transitory and
+# will be deleted at the end of every run.
+path    = "mapping.db"
 
+
+### Jira parameters
 [jira]
-api_token               = "abcd"
+# The Jira API token and username to use to authenticate on the Jira side of
+# the integration.
+api_token               = "abcdef"
 api_username            = "username"
+
+# The URL for the Jira instance.
 url                     = "https://not-jira"
+
+# The name of the "Closed" status.
 closed                  = "Done"
+
+# Typically this field will be set after the first run of the integration,
+# if the closed transition id is known, you can specify it here by setting this
+# value.
+#closed_id               =
+
+# These are the states that we will ignore when looking for open issues both
+# during the initial mapping cache population as well as when we search for
+# individual issues.
 closed_map              = ["Closed", "Done", "Resolved"]
-closed_message          = "Tenable identified the issue as resolved."
+
+# Should the integration manage the screen, screen tabs, and the field to
+# screen assignments?  The default here is true as if a field were to be added,
+# the next sync would automatically assign the field to the configured tab.
+# However, if you would rather not have the integration talk to the screens
+# APIs, then you can disable this function here.
 manage_screens          = true
+
+# When we transition the issue to a closed state, what message to we pass as
+# part of the transition?
+closed_message          = "Tenable identified the issue as resolved."
+
+# These fields map the tenable severity levels to the associated Jira priority
+# levels.  If your priority levels are different than the default, feel free to
+# adjust these as necessary.
 severity_map.critical   = 1
 severity_map.high       = 2
 severity_map.medium     = 3
 severity_map.low        = 4
+severity_map.info       = 5
+
+# The Tenable state to Jira open status mapping set here determines how we
+# associate the different tenable states to Jira's current issue status.  A
+# `true` value denotes that the issue is OPEN, whereas a `false` value denotes
+# a CLOSED state.
 state_map.open          = true
 state_map.reopened      = true
 state_map.fixed         = false
 
+# How many concurrent connections do we want to make to the Jira platform?
+# The more workers that are supported, the faster things will go, however the
+# more likely we may hit some rate limiting.  Current maximum supported value
+# is 10.
+max_workers             = 4
+
 [jira.project]
+# The key to use for the Jira project we will be managing the issues within.
 key                 = "VULN"
-lead_account_id     = "abcd"
+
+# The load account to associate to the project.
+lead_account_id     = "557058:071b0552-f7ed-4fe4-a718-891ea15592a0"
+
+# The name of the Jira project.
 name                = "Vulnerability Management"
+
+# Project description.
 description         = "Managing vulnerabilities discovered from Tenable."
-url                 = "https://tenable.com"
+
+# The default assignee behavior for the project.  Jira supports either setting
+# this to "UNASSIGNED" or "PROJECT_LEAD"
 assignee            = "UNASSIGNED"
+
+# What is the URL associated to the project.  This is for informational
+# purposes.
+url                 = "https://tenable.com"
+
+# The Project type and template keys.  We generally recommend leaving these
+# settings alone, as the integration has only been tested against the
+# business project type.
 type_key            = "business"
 template_key        = "com.atlassian.jira-core-project-templates:jira-core-simplified-task-tracking"
 
 
+### Jira Task parameters
+# Note that there will also be an id field that will be added to this
+# definition after initial setup.  This id refers to the jira issuetype id that
+# was determined from the initial setup.
 [jira.task]
-id              = 10101
+# The name and type of the Jira Task issuetype.
 name            = "Task"
 type            = "standard"
+id              = 10101
+
+# What fields should we use to search for a matching task within Jira?
 search.tsc      = ["Tenable Plugin ID"]
 search.tvm      = ["Tenable Plugin ID"]
+
+# How should we construct the summary field for the Jira issue?
+# Please note that the field declaration is specific to the field names for the
+# findings within that platform.
 summary.tsc     = "[{f[pluginID]}] {f[pluginName]}"
 summary.tvm     = "[{f[plugin.id]}] {f[plugin.name]}"
 
+# How should we construct the description field within the issue?  As Jira
+# uses a heading & paragraph document format for this field, what we will to
+# is construct the description in the order that they are configured for each
+# platform.  The header value is constructed using the value of the "name"
+# parameter and we will pull the value of the attribute defined for the
+# paragraph content.
 [[jira.task.description.tvm]]
 name    = "Description"
 attr  = "plugin.description"
 
 [[jira.task.description.tvm]]
 name    = "Solution"
-attr  = "solution"
+attr  = "plugin.solution"
 
 [[jira.task.description.tsc]]
 name    = "Description"
@@ -66,11 +201,17 @@ attr  = "description"
 name    = "Solution"
 attr  = "solution"
 
-
+### Jira Sub-Task parameters
+# Note that there will also be an id field that will be added to this
+# definition after initial setup.  This id refers to the jira issuetype id that
+# was determined from the initial setup.
 [jira.subtask]
-id          = 10102
+# The name and type of the Jira Sub-Task issuetype.
 name        = "Sub-task"
 type        = "subtask"
+id          = 10102
+
+# What fields should we use to search for a matching Sub-Task within Jira?
 search.tvm  = [
     "Tenable Platform",
     "Tenable Plugin ID",
@@ -87,16 +228,26 @@ search.tsc  = [
     "Vulnerability Port",
     "Vulnerability Protocol"
 ]
+
+# How should we construct the summary field for the Jira issue?
+# Please note that the field declaration is specific to the field names for the
+# findings within that platform.
 summary.tvm = "[{f[asset.hostname]}/{f[port.port]}/{f[port.protocol]}] [{f[plugin.id]}] {f[plugin.name]}"
 summary.tsc = "[{f[ip]}/{f[port]}/{f[protocol]}] [{f[pluginID]}] {f[pluginName]}"
 
+# How should we construct the description field within the issue?  As Jira
+# uses a heading & paragraph document format for this field, what we will to
+# is construct the description in the order that they are configured for each
+# platform.  The header value is constructed using the value of the "name"
+# parameter and we will pull the value of the attribute defined for the
+# paragraph content.
 [[jira.subtask.description.tvm]]
 name    = "Description"
 attr  = "plugin.description"
 
 [[jira.subtask.description.tvm]]
 name    = "Solution"
-attr  = "solution"
+attr  = "plugin.solution"
 
 [[jira.subtask.description.tvm]]
 name    = "Output"
@@ -112,11 +263,88 @@ attr  = "solution"
 
 [[jira.subtask.description.tsc]]
 name    = "Output"
-attr  = "pluginOutput"
+attr  = "pluginText"
+
+
+### Jira Custom Field Declarations
+# The list of field declarations maps the finding attributes to a custom field
+# within Jira.  The list of field here are will appear in the assigned screen
+# tabs in the same order that they have been configured within this config.
+#
+# Example field:
+# [[jira.fields]]
+# name          = "Jira Field Name"
+# screen_tab    = "Screen Tab Name"
+# type          = "customfield type"
+# searcher      = "searcher type"
+# task_types    = ["subtask", "task"]
+# attr.tvm      = "tvm finding attribute"
+# attr.tsc      = "tsc finding attribute"
+#
+# * Screen tab names are used as part of screen management within the initial
+#   setup and first phase of the sync run unless manage_screens is disabled.
+# * The integration supports proper formatting of a subset of the supportable
+#   jira fieldtypes based on the kind of data stored within a finding in TVM or
+#   TSC.  Those supported field types and searcher types are:
+#
+#   Field Type                Searcher Types
+#  ------------------------- ---------------------------------
+#  readonlyfield             textsearcher
+#  textfield                 textsearcher
+#  textarea                  textsearcher
+#  labels                    labelsearcher
+#  float                     exactnumber, numberrange
+#  datetime                  datetimerange
+#
+# ** These field types below _may_ work, however are untested
+#  url                       exacttextsearcher
+#
+# ** These field types below will likely _not_ work as they appear to require
+#    a tailored data structure.
+# cascadingselect            cascadingselectsearcher
+# datepicker                 daterange
+# grouppicker                grouppickersearcher
+# importid                   exactnumber, numberrange
+# multicheckboxes            multiselectsearcher
+# multigrouppicker           multiselectsearcher
+# multiselect                multiselectsearcher
+# multiuserpicker            multiselectsearcher
+# multiversion               versionsearcher
+# project                    projectsearcher
+# radiobuttons               multiselectsearcher
+# select                     multiselectsearcher
+# userpicker                 userpickergroupsearcher
+# version                    versionsearcher
+
+# Additional optional attributes that will change the mapping behavior:
+#
+# If the platform_id attribute is set to true, then the attributes on this
+# field will be ignored and the platform name in the tenable section will be
+# used as the field value instead.
+# platform_id   = true
+#
+# If the map_to_state flag is set, then we will use the value from the finding
+# attribute and check that value against the state map in the [jira] section
+# of the configuration file to determine if we close the issue or not.
+# map_to_state  = true
+#
+# If the map_to_state flag is set, then we will use the value from the finding
+# attribute and check that value against the priority map in the [jira] section
+# of the configuration file to determine what the priority of the issue should
+# be.
+# map_to_priority = true
+#
+# Once initial setup has been performed, the jira customfield id will also be
+# stored within the configuration for each field as the id attribute.  If there
+# is a need to change the field mapping, this can be performed by updating this
+# field.
+# id = customfield_XXXX
+
+
 
 [[jira.fields]]
 name        = "Tenable Asset UUID"
-screen_tab  = "Assets"
+screen_tab  = "Asset"
 type        = "labels"
 searcher    = "labelsearcher"
 task_types  = ["subtask"]
@@ -126,7 +354,7 @@ id          = "customfield_1"
 
 [[jira.fields]]
 name        = "Tenable Asset Tags"
-screen_tab  = "Assets"
+screen_tab  = "Asset"
 type        = "labels"
 searcher    = "labelsearcher"
 task_types  = ["subtask"]
@@ -135,7 +363,7 @@ id          = "customfield_2"
 
 [[jira.fields]]
 name        = "Tenable Platform"
-screen_tab  = "Assets"
+screen_tab  = "Asset"
 type        = "readonlyfield"
 searcher    = "textsearcher"
 platform_id = true
@@ -144,7 +372,7 @@ id          = "customfield_3"
 
 [[jira.fields]]
 name        = "Device Hostname"
-screen_tab  = "Assets"
+screen_tab  = "Asset"
 type        = "labels"
 searcher    = "labelsearcher"
 task_types  = ["subtask"]
@@ -154,7 +382,7 @@ id          = "customfield_4"
 
 [[jira.fields]]
 name        = "Device NetBIOS Name"
-screen_tab  = "Assets"
+screen_tab  = "Asset"
 type        = "readonlyfield"
 searcher    = "textsearcher"
 task_types  = ["subtask"]
@@ -163,7 +391,7 @@ id          = "customfield_5"
 
 [[jira.fields]]
 name        = "Device DNS Name"
-screen_tab  = "Assets"
+screen_tab  = "Asset"
 type        = "readonlyfield"
 searcher    = "textsearcher"
 task_types  = ["subtask"]
@@ -173,17 +401,17 @@ id          = "customfield_6"
 
 [[jira.fields]]
 name        = "Device IPv4 Addresses"
-screen_tab  = "Assets"
+screen_tab  = "Asset"
 type        = "labels"
 searcher    = "labelsearcher"
 task_types  = ["subtask"]
 attr.tvm    = "asset.ipv4"
-attr.tsc    = "asset.ip"
+attr.tsc    = "ip"
 id          = "customfield_7"
 
 [[jira.fields]]
 name        = "Device IPv6 Addresses"
-screen_tab  = "Assets"
+screen_tab  = "Asset"
 type        = "labels"
 searcher    = "labelsearcher"
 task_types  = ["subtask"]
@@ -192,7 +420,7 @@ id          = "customfield_8"
 
 [[jira.fields]]
 name        = "Device Network ID"
-screen_tab  = "Assets"
+screen_tab  = "Asset"
 type        = "readonlyfield"
 searcher    = "textsearcher"
 task_types  = ["subtask"]
@@ -201,7 +429,7 @@ id          = "customfield_9"
 
 [[jira.fields]]
 name        = "Vulnerability Repository ID"
-screen_tab  = "Assets"
+screen_tab  = "Asset"
 type        = "readonlyfield"
 searcher    = "textsearcher"
 task_types  = ["subtask"]
@@ -210,7 +438,7 @@ id          = "customfield_10"
 
 [[jira.fields]]
 name        = "Vulnerability Repository Name"
-screen_tab  = "Assets"
+screen_tab  = "Asset"
 type        = "readonlyfield"
 searcher    = "textsearcher"
 task_types  = ["subtask"]
@@ -223,7 +451,7 @@ screen_tab  = "Vulnerability"
 type        = "labels"
 searcher    = "labelsearcher"
 task_types  = ["task"]
-attr.tvm    = "pluvin.cve"
+attr.tvm    = "plugin.cve"
 attr.tsc    = "cve"
 id          = "customfield_12"
 
@@ -236,6 +464,11 @@ task_types  = ["task", "subtask"]
 attr.tvm    = "plugin.vpr.score"
 attr.tsc    = "vprScore"
 id          = "customfield_13"
+# If this is a migration from a v1 integration, then comment the type and
+# searcher fields above and uncomment the ones below to make the field
+# definition compatible with the older customfield definition.
+#type        = "readonlyfield"
+#searcher    = "textsearcher"
 
 [[jira.fields]]
 name        = "CVSSv2 Base Score"
@@ -246,6 +479,12 @@ task_types  = ["task", "subtask"]
 attr.tvm    = "plugin.cvss_base_score"
 attr.tsc    = "baseScore"
 id          = "customfield_14"
+# If this is a migration from a v1 integration, then comment the type and
+# searcher fields above and uncomment the ones below to make the field
+# definition compatible with the older customfield definition.
+#type        = "readonlyfield"
+#searcher    = "textsearcher"
+
 
 [[jira.fields]]
 name        = "CVSSv2 Temporal Score"
@@ -256,6 +495,12 @@ task_types  = ["task", "subtask"]
 attr.tvm    = "plugin.cvss_temporal_score"
 attr.tsc    = "temporalScore"
 id          = "customfield_15"
+# If this is a migration from a v1 integration, then comment the type and
+# searcher fields above and uncomment the ones below to make the field
+# definition compatible with the older customfield definition.
+#type        = "readonlyfield"
+#searcher    = "textsearcher"
+
 
 [[jira.fields]]
 name        = "CVSSv3 Base Score"
@@ -266,6 +511,12 @@ task_types  = ["task", "subtask"]
 attr.tvm    = "plugin.cvss3_base_score"
 attr.tsc    = "cvssV3BaseScore"
 id          = "customfield_16"
+# If this is a migration from a v1 integration, then comment the type and
+# searcher fields above and uncomment the ones below to make the field
+# definition compatible with the older customfield definition.
+#type        = "readonlyfield"
+#searcher    = "textsearcher"
+
 
 [[jira.fields]]
 name        = "CVSSv3 Temporal Score"
@@ -276,6 +527,12 @@ task_types  = ["task", "subtask"]
 attr.tvm    = "plugin.cvss3_temporal_score"
 attr.tsc    = "cvssV3TemporalScore"
 id          = "customfield_17"
+# If this is a migration from a v1 integration, then comment the type and
+# searcher fields above and uncomment the ones below to make the field
+# definition compatible with the older customfield definition.
+#type        = "readonlyfield"
+#searcher    = "textsearcher"
+
 
 [[jira.fields]]
 name        = "Tenable Plugin ID"
