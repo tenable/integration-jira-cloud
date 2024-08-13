@@ -1,3 +1,4 @@
+from copy import copy
 from typing import Generator, Any
 import arrow
 from tenable.io import TenableIO
@@ -18,6 +19,7 @@ class Tenable:
     severity: list[str]
     chunk_size: int = 1000
     page_size: int = 1000
+    vpr_score: (float | None) = None
     query_id: (int | None) = None
     last_run: (int | None) = None
 
@@ -33,6 +35,7 @@ class Tenable:
         self.close_accepted = self.config['tenable'].get('fix_accepted_risks',
                                                          True
                                                          )
+        self.vpr_score = self.config['tenable'].get('vpr_score')
 
         if not self.timestamp:
             self.timestamp = int(arrow.now()
@@ -56,55 +59,91 @@ class Tenable:
                                  build=version
                                  )
 
-    def get_generator(self) -> Generator:
+    def get_tvm_generator(self) -> Generator[Any, Any, Any]:
+        """
+        Initiates the TVM exports and returns the TVM Generator.
+        """
         self.last_run = int(arrow.now().timestamp())
+        assets = self.tvm.exports.assets(updated_at=self.timestamp,
+                                         chunk_size=self.chunk_size
+                                         )
+        kwargs = {
+            'since': self.timestamp,
+            'severity': self.severity,
+            'state': ['open', 'reopened', 'fixed'],
+            'include_unlicensed': True,
+            'num_assets': self.chunk_size,
+        }
+        if self.vpr_score:
+            kwargs['vpr_score'] = {'gte': self.vpr_score}
+        vulns = self.tvm.exports.vulns(**kwargs)
+        return tvm_merged_data(assets,
+                               vulns,
+                               close_accepted=self.close_accepted,
+                               )
+
+    def get_tsc_generator(self) -> Generator[Any, Any, Any]:
+        """
+        Queries the Analysis API and returns the TSC Generator.
+        """
+        self.last_run = int(arrow.now().timestamp())
+
+        # The severity map to link the string severities to the integer values
+        # that TSC expects.
+        sevmap = {
+            'info': '0',
+            'low': '1',
+            'medium': '2',
+            'high': '3',
+            'critical': '4'
+        }
+
+        # Construct the TSC timestamp offsets.
+        tsc_ts = f'{self.timestamp}-{self.last_run}'
+
+        # The base parameters to pass to the API.
+        params = {
+            'source': 'cumulative',
+            'limit': self.page_size
+        }
+
+        # The initial filters to pass to the API.
+        filters = [
+            ('severity', '=', ','.join([sevmap[s] for s in self.severity])),
+        ]
+
+        # If the VPR score is set, then we will construct that filter as well.
+        if self.vpr_score:
+            filters.append(('vprScore', '=', f'{self.vpr_score}-10'))
+
+        # If the query ID is set, then we will pass that parameter.
+        if self.query_id:
+            params['query_id'] = self.query_id
+
+
+        # Fetch the cumulative results iterator.
+        f = copy(filters)
+        f.append(('lastSeen', '=', tsc_ts))
+        cumulative = self.tsc.analysis.vulns(*f, **params)
+
+        # Fetch the patched results iterator.
+        params['source'] = 'patched'
+        f = copy(filters)
+        f.append(('lastMitigated', '=', tsc_ts))
+        patched = self.tsc.analysis.vulns(*f, **params)
+        return tsc_merged_data(cumulative,
+                               patched,
+                               close_accepted=self.close_accepted,
+                               )
+
+    def get_generator(self) -> (Generator[Any, Any, Any] | None):
+        """
+        Retreives the appropriate generator based on the configured platform.
+        """
         if self.platform == 'tvm':
-            assets = self.tvm.exports.assets(updated_at=self.timestamp,
-                                             chunk_size=self.chunk_size
-                                             )
-            vulns = self.tvm.exports.vulns(since=self.timestamp,
-                                           severity=self.severity,
-                                           state=['open', 'reopened', 'fixed'],
-                                           include_unlicensed=True,
-                                           num_assets=self.chunk_size,
-                                           )
-            return tvm_merged_data(assets,
-                                   vulns,
-                                   close_accepted=self.close_accepted,
-                                   )
+            return self.get_tvm_generator()
         if self.platform == 'tsc':
-            sevmap = {
-                'info': '0',
-                'low': '1',
-                'medium': '2',
-                'high': '3',
-                'critical': '4'
-            }
-            tsc_ts = f'{self.timestamp}-{self.last_run}'
-            sevfilter = ','.join([sevmap[s] for s in self.severity])
-            params = {
-                'source': 'cumulative',
-                'limit': self.page_size
-            }
-            if self.query_id:
-                params['query_id'] = self.query_id
-
-            # Get the cumulative results
-            cumulative = self.tsc.analysis.vulns(('severity', '=', sevfilter),
-                                                 ('lastSeen', '=', tsc_ts),
-                                                 **params
-                                                 )
-
-            # Get the patched results
-            params['source'] = 'patched'
-            patched = self.tsc.analysis.vulns(('severity', '=', sevfilter),
-                                              ('lastMitigated', '=', tsc_ts),
-                                              **params
-                                              )
-            return tsc_merged_data(cumulative,
-                                   patched,
-                                   close_accepted=self.close_accepted,
-                                   )
+            return self.get_tsc_generator()
 
     def get_asset_cleanup(self) -> (Generator[Any, Any, Any] | list):
         if self.platform == 'tvm':
