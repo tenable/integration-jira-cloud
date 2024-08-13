@@ -444,7 +444,7 @@ name        = "CVEs"
 screen_tab  = "Vulnerability"
 type        = "labels"
 searcher    = "labelsearcher"
-task_types  = ["task"]
+task_types  = ["task", "subtask"]
 attr.tvm    = "plugin.cve"
 attr.tsc    = "cve"
 
