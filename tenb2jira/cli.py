@@ -144,6 +144,11 @@ def sync(configfile: Path,
 
     setup_logging(verbose)
 
+    dbfile = Path(config['mapping_database']['path'])
+    if dbfile.exists():
+        console.print('WARNING :: Mapping Cache discovered.  We will be removing it.')
+        dbfile.unlink()
+
     processor = Processor(config, ignore_last_run=ignore_last_run)
     console.print(Columns([tenable_table(config),
                            jira_table(config)

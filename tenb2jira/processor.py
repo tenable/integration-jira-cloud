@@ -185,7 +185,7 @@ class Processor:
         # and return the jira issue id back to the caller.
         if sql:
             if finding.get('integration_pid_updated') > self.last_run:
-                if sql.updated <= self.start_time.datetime:
+                if arrow.get(sql.updated, 'UTC') <= self.start_time:
                     self.jira.api.issues.update(sql.jira_id,
                                                 fields=task.fields,
                                                 )
