@@ -90,7 +90,7 @@ def test_get_asset_cleanup(tsc, tvm):
 def test_get_generator(tvm, tsc):
     responses.post('https://nourl/assets/export', json={'export_uuid': 0})
     responses.post('https://nourl/vulns/export', json={'export_uuid': 0})
-    assert isinstance(tvm.get_generator(), Generator)
+    assert isinstance(tvm.get_generator(arrow.now()), Generator)
 
     responses.get('https://nourl/rest/query/1?fields=filters', json={
         'response': {'query': {'filters': []}},
@@ -100,7 +100,7 @@ def test_get_generator(tvm, tsc):
         'response': {},
         'error_code': None
     })
-    assert isinstance(tsc.get_generator(), Generator)
+    assert isinstance(tsc.get_generator(arrow.now()), Generator)
 
 
 @responses.activate
@@ -150,6 +150,6 @@ def test_get_tsc_generator(tsc, tsc_finding):
                    })]
                    )
     tsc.vpr_score = 6.1
-    generator = tsc.get_tsc_generator()
+    generator = tsc.get_tsc_generator(now)
     assert isinstance(generator, Generator)
     next(generator)
