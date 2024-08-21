@@ -25,7 +25,7 @@ class TaskInstance:
         self.is_open = is_open
 
     def __repr__(self):
-        return f'Task("{self.jql}", {len(self.fields)})'
+        return f'Task("{self.jql_stmt}", {len(self.fields)})'
 
     @property
     def jql_stmt(self):

@@ -18,6 +18,43 @@ def field_config():
     }
 
 
+def test_field_repr(field_config):
+    f = Field(config=field_config,
+              platform='tvm',
+              platform_map={'tvm': 'Test Platform'}
+              )
+    assert repr(f) == 'Field(1: Test Field)'
+
+
+def test_field_attr(field_config):
+    f = Field(config=field_config,
+              platform='tvm',
+              platform_map={'tvm': 'Test Platform'}
+              )
+    assert f.attr == 'test'
+
+    field_config.pop('attr', None)
+    field_config['platform_id'] = True
+    f = Field(config=field_config,
+              platform='tvm',
+              platform_map={'tvm': 'Test Platform'}
+              )
+    assert f.attribute == None
+    assert f.platform_id == 'Test Platform'
+    assert f.attr == 'Test Platform'
+
+    field_config.pop('platform_id', None)
+    field_config['static_value'] = 'static'
+    f = Field(config=field_config,
+              platform='tvm',
+              platform_map={'tvm': 'Test Platform'}
+              )
+    assert f.attribute == None
+    assert f.platform_id == None
+    assert f.static_value == 'static'
+    assert f.attr == 'static'
+
+
 def test_field_noapi(field_config):
     f = Field(config=field_config,
               platform='tvm',
@@ -130,9 +167,9 @@ def test_field_parse_value_float(field_config):
               platform_map={'tvm': 'Test Platform'}
               )
     f.type = 'float'
-    assert f.parse_value({'test': 1}) == '1.0'
-    assert f.parse_value({'test': 1.0}) == '1.0'
-    assert f.parse_value({'test': '1'}) == '1.0'
+    assert f.parse_value({'test': 1}) == 1.0
+    assert f.parse_value({'test': 1.0}) == 1.0
+    assert f.parse_value({'test': '1'}) == 1.0
 
 
 def test_field_parse_value_datetime(field_config):

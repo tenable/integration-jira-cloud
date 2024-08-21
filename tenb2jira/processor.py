@@ -1,3 +1,4 @@
+from typing import Optional
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -29,8 +30,13 @@ class Processor:
     plugin_id: str
     closed_map: list[str]
 
-    def __init__(self, config: dict, ignore_last_run: bool = False):
-        dburi = f'sqlite:///{config["mapping_database"].get("path")}'
+    def __init__(self,
+                 config: dict,
+                 ignore_last_run: bool = False,
+                 dburi: Optional[str] = None,
+                 ):
+        if not dburi:
+            dburi = f'sqlite:///{config["mapping_database"].get("path")}'
 
         # For situations where we will need to ignore the last_run variable,
         # This will pull it from the config, forcing the integration to use

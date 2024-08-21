@@ -59,12 +59,15 @@ class Field:
 
     @property
     def attr(self):
-        if self.attribute:
-            return self.attribute
-        if self.static_value:
-            return self.attribute
+        """
+        Return the appropriate value (either platform_id, static_value, or
+        attribute) depending on how the field was configured.
+        """
         if self.platform_id:
             return self.platform_id
+        if self.static_value:
+            return self.static_value
+        return self.attribute
 
     def fetch_field_id(self, api) -> bool:
         """
