@@ -291,11 +291,11 @@ def test_with_tvm_data(tvm_generator, example_config):
                            'CVE-2024-4777',
                            'CVE-2024-4778',
                            ],
-        'customfield_13': '9.2',
-        'customfield_14': '6.4',
-        'customfield_15': '5.0',
-        'customfield_16': '6.5',
-        'customfield_17': '5.9',
+        'customfield_13': 9.2,
+        'customfield_14': 6.4,
+        'customfield_15': 5.0,
+        'customfield_16': 6.5,
+        'customfield_17': 5.9,
         'customfield_18': '51192',
         'customfield_19': 'General',
         'customfield_20': 'SSL Certificate Cannot Be Trusted',
@@ -369,11 +369,11 @@ def test_with_tvm_data(tvm_generator, example_config):
                            'CVE-2024-4777',
                            'CVE-2024-4778',
                            ],
-        'customfield_13': '9.2',
-        'customfield_14': '6.4',
-        'customfield_15': '5.0',
-        'customfield_16': '6.5',
-        'customfield_17': '5.9',
+        'customfield_13': 9.2,
+        'customfield_14': 6.4,
+        'customfield_15': 5.0,
+        'customfield_16': 6.5,
+        'customfield_17': 5.9,
         'customfield_18': '51192',
         'customfield_19': 'General',
         'customfield_20': 'SSL Certificate Cannot Be Trusted',
@@ -447,6 +447,10 @@ def test_with_tsc_data(tsc_generator, example_config):
     finding = next(tsc_generator)
     rtask = task.generate(finding)
     rsubtask = subtask.generate(finding)
+
+    assert repr(rtask) == ('Task("project = "VULN" AND issuetype = "Task" AND '
+                           '"Tenable Plugin ID" ~ "123560"", 35)'
+                           )
     assert rtask.fields == {
         'customfield_1': ['d90cdab5-b745-3e7e-9268-aa0f445ed924'],
         'customfield_2': None,
@@ -465,10 +469,10 @@ def test_with_tsc_data(tsc_generator, example_config):
                            'CVE-2019-3863'
                            ],
         'customfield_13': None,
-        'customfield_14': '9.3',
-        'customfield_15': '6.9',
-        'customfield_16': '8.8',
-        'customfield_17': '7.7',
+        'customfield_14': 9.3,
+        'customfield_15': 6.9,
+        'customfield_16': 8.8,
+        'customfield_17': 7.7,
         'customfield_18': '123560',
         'customfield_19': None,
         'customfield_20': 'CentOS 7 : libssh2 (CESA-2019:0679)',
@@ -532,10 +536,10 @@ def test_with_tsc_data(tsc_generator, example_config):
                            'CVE-2019-3863'
                            ],
         'customfield_13': None,
-        'customfield_14': '9.3',
-        'customfield_15': '6.9',
-        'customfield_16': '8.8',
-        'customfield_17': '7.7',
+        'customfield_14': 9.3,
+        'customfield_15': 6.9,
+        'customfield_16': 8.8,
+        'customfield_17': 7.7,
         'customfield_18': '123560',
         'customfield_19': None,
         'customfield_20': 'CentOS 7 : libssh2 (CESA-2019:0679)',

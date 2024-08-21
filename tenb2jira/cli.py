@@ -129,13 +129,26 @@ def sync(configfile: Path,
          verbose: bool = False,
          cleanup: bool = True,
          ignore_last_run: bool = False,
+         debug: bool = False,
          ):
     """
     Perform the sync between Tenable & Jira
     """
-    setup_logging(verbose)
     with configfile.open('r', encoding='utf-8') as fobj:
         config = tomlkit.load(fobj)
+
+    if debug:
+        verbose = True
+        cleanup = False
+        config['jira']['max_workers'] = 1
+
+    setup_logging(verbose)
+
+    dbfile = Path(config['mapping_database']['path'])
+    if dbfile.exists():
+        console.print('WARNING :: Mapping Cache discovered.  We will be removing it.')
+        dbfile.unlink()
+
     processor = Processor(config, ignore_last_run=ignore_last_run)
     console.print(Columns([tenable_table(config),
                            jira_table(config)

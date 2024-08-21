@@ -9,8 +9,8 @@ from tenb2jira.version import version
 
 
 class Tenable:
-    tvm: (TenableIO | None) = None
-    tsc: (TenableSC | None) = None
+    tvm: TenableIO
+    tsc: TenableSC
     config: dict
     platform: str
     timestamp: int
@@ -82,11 +82,10 @@ class Tenable:
                                close_accepted=self.close_accepted,
                                )
 
-    def get_tsc_generator(self) -> Generator[Any, Any, Any]:
+    def get_tsc_generator(self, start_time: int) -> Generator[Any, Any, Any]:
         """
         Queries the Analysis API and returns the TSC Generator.
         """
-        self.last_run = int(arrow.now().timestamp())
 
         # The severity map to link the string severities to the integer values
         # that TSC expects.
@@ -99,7 +98,7 @@ class Tenable:
         }
 
         # Construct the TSC timestamp offsets.
-        tsc_ts = f'{self.timestamp}-{self.last_run}'
+        tsc_ts = f'{self.timestamp}-{start_time}'
 
         # The base parameters to pass to the API.
         params = {
@@ -136,14 +135,15 @@ class Tenable:
                                close_accepted=self.close_accepted,
                                )
 
-    def get_generator(self) -> (Generator[Any, Any, Any] | None):
+    def get_generator(self,
+                      start_time: arrow.Arrow
+                      ) -> Generator[Any, Any, Any]:
         """
         Retreives the appropriate generator based on the configured platform.
         """
         if self.platform == 'tvm':
             return self.get_tvm_generator()
-        if self.platform == 'tsc':
-            return self.get_tsc_generator()
+        return self.get_tsc_generator(int(start_time.timestamp()))
 
     def get_asset_cleanup(self) -> (Generator[Any, Any, Any] | list):
         if self.platform == 'tvm':
@@ -154,5 +154,4 @@ class Tenable:
                                               chunk_size=self.chunk_size
                                               )
             return tvm_asset_cleanup(dassets, tassets)
-        else:
-            return []
+        return []

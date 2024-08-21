@@ -55,3 +55,25 @@ readme = {file = ["README.md"], content-type = "text/markdown"}
 [tool.setuptools.packages.find]
 include         = ["tenb2jira*"]
 
+[tool.ruff]
+target-version = "py312"
+exclude = [
+  ".nova",
+  ".github",
+  ".git",
+  ".pytest_cache",
+  "__pycache__"
+]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "B"]
+fixable = [ "ALL" ]
+unfixable = [ "B" ]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["E402"]
+"**/{tests,docs,tools}/*" = ["E402"]
+
+[tool.flake8]
+max-line-length = 88
+count = true

@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Dict
 import time
 import logging
 from box import Box
@@ -24,12 +24,18 @@ class Jira:
     project: dict
 
     @property
-    def field_by_name_map(self):
-        return {f.name:f for f in self.fields}
+    def field_by_name_map(self) -> Dict[str, Field]:
+        """
+        Returns the fields in a dictionary with the field name as the key
+        """
+        return {f.name: f for f in self.fields}
 
     @property
-    def field_by_id_map(self):
-        return {f.id:f for f in self.fields}
+    def field_by_id_map(self) -> Dict[str, Field]:
+        """
+        Returns the fields in a dictionary with the field id as the key
+        """
+        return {f.id: f for f in self.fields}
 
     def __init__(self, config: dict):
         self.config = config

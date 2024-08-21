@@ -1,3 +1,4 @@
+from typing import Optional
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -29,8 +30,13 @@ class Processor:
     plugin_id: str
     closed_map: list[str]
 
-    def __init__(self, config: dict, ignore_last_run: bool = False):
-        dburi = f'sqlite:///{config["mapping_database"].get("path")}'
+    def __init__(self,
+                 config: dict,
+                 ignore_last_run: bool = False,
+                 dburi: Optional[str] = None,
+                 ):
+        if not dburi:
+            dburi = f'sqlite:///{config["mapping_database"].get("path")}'
 
         # For situations where we will need to ignore the last_run variable,
         # This will pull it from the config, forcing the integration to use
@@ -124,7 +130,7 @@ class Processor:
                             value = value[0]
                         item[fields[key]] = value
                     # item = {fields[k]: v for k, v in issue.fields.items()}
-                    item['updated'] = self.start_time
+                    item['updated'] = self.start_time.datetime
                     item['jira_id'] = issue.key
                     if not missing:
                         log.debug(f'Adding {issue.key} to cache.')
@@ -185,11 +191,11 @@ class Processor:
         # and return the jira issue id back to the caller.
         if sql:
             if finding.get('integration_pid_updated') > self.last_run:
-                if sql.updated <= self.start_time:
+                if arrow.get(sql.updated, 'UTC') <= self.start_time:
                     self.jira.api.issues.update(sql.jira_id,
                                                 fields=task.fields,
                                                 )
-                sql.updated = datetime.now()
+                sql.updated = datetime.utcnow()
                 s.commit()
                 log.info(f'Matched Task "{sql.jira_id}" to '
                          'SQL Cache and updated.')
@@ -213,7 +219,7 @@ class Processor:
         if len(page.issues) == 1:
             sql = TaskMap(plugin_id=task.fields[self.plugin_id],
                           jira_id=page.issues[0].key,
-                          updated=datetime.now(),
+                          updated=datetime.utcnow(),
                           )
             s.add(sql)
             s.commit()
@@ -232,7 +238,7 @@ class Processor:
             resp = self.jira.api.issues.create(fields=task.fields)
             sql = TaskMap(plugin_id=task.fields[self.plugin_id],
                           jira_id=resp.key,
-                          updated=datetime.now()
+                          updated=datetime.utcnow()
                           )
             s.add(sql)
             s.commit()
@@ -271,7 +277,7 @@ class Processor:
         if sql:
             if not task.is_open:
                 sql.is_open = task.is_open
-                sql.updated = datetime.now()
+                sql.updated = datetime.utcnow()
                 s.commit()
                 self.close_task(sql.jira_id)
                 action = 'closed subtask'
@@ -313,7 +319,7 @@ class Processor:
                                  finding_id=task.fields[self.finding_id],
                                  jira_id=page.issues[0].key,
                                  is_open=task.is_open,
-                                 updated=datetime.now(),
+                                 updated=datetime.utcnow(),
                                  )
                 s.add(sql)
                 s.commit()
@@ -341,7 +347,7 @@ class Processor:
                                      finding_id=task.fields[self.finding_id],
                                      jira_id=resp.key,
                                      is_open=task.is_open,
-                                     updated=datetime.now(),
+                                     updated=datetime.utcnow(),
                                      )
                     s.add(sql)
                     s.commit()
@@ -419,11 +425,10 @@ class Processor:
         """
         Tenable to Jira Synchronization method.
         """
-        self.start_time = datetime.now()
-        ts = int(arrow.get(self.start_time).timestamp())
+        self.start_time = arrow.utcnow()
 
         # Get the findings and the asset cleanup generators.
-        findings = self.tenable.get_generator()
+        findings = self.tenable.get_generator(self.start_time)
         asset_cleanup = self.tenable.get_asset_cleanup()
 
         # build the db cache
@@ -469,8 +474,8 @@ class Processor:
         self.close_empty_tasks()
 
         # update the last_run timestamp with the time that we started the sync.
-        self.config['tenable']['last_run'] = ts
-        self.finished_time = datetime.now()
+        self.config['tenable']['last_run'] = int(self.start_time.timestamp())
+        self.finished_time = arrow.utcnow()
 
         self.engine.dispose()
         # Delete the mapping database.
