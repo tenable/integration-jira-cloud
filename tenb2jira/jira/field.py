@@ -155,7 +155,7 @@ class Field:
 
             # float values should always be returned as a float.
             case 'float':
-                return str(float(value))
+                return float(value)
 
             # datetime values should be returned in a specific format.  Here
             # we attempt to normalize both timestamp and ISO formatted values
