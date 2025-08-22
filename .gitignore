@@ -4,6 +4,9 @@ __pycache__
 .nova
 .coverage
 *.egg-info
+*.log
+*.toml
+!tmpl*toml
 /dist
 /mapping.db
 /base_config_tsc.toml

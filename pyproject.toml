@@ -34,9 +34,9 @@ dependencies    = [
     "typer>=0.9.0",
     "tomlkit>=0.12.4",
     "rich>=13.3.1",
-    "pytenable>=1.4.20",
+    "pytenable>=1.8.3",
     "SQLAlchemy>=2.0.28",
-    "pydantic>=2.7.1"
+    "pydantic>=2.7.1",
 ]
 
 [project.urls]
@@ -77,3 +77,12 @@ unfixable = [ "B" ]
 [tool.flake8]
 max-line-length = 88
 count = true
+
+[dependency-groups]
+dev = [
+    "ptpython>=3.0.30",
+]
+testing = [
+    "pytest>=8.4.1",
+    "responses>=0.25.8",
+]
