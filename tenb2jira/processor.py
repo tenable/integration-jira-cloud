@@ -1,20 +1,21 @@
-from typing import Optional
 import logging
 from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+from typing import Iterable, Optional, Type
 from uuid import UUID
-from sqlalchemy.dialects.sqlite import insert
-from sqlalchemy import create_engine, Engine, delete
-from sqlalchemy.orm import Session
+
 import arrow
-from .jira.jira import Jira
+from sqlalchemy import Engine, create_engine, delete
+from sqlalchemy.dialects.sqlite import insert
+from sqlalchemy.orm import Session
+
 from .jira.api.iterator import search_generator
+from .jira.jira import Jira
+from .models import Base, SubTaskMap, TaskMap
 from .tenable.tenable import Tenable
-from .models import TaskMap, SubTaskMap, Base
 
-
-log = logging.getLogger('Processor')
+log = logging.getLogger("Processor")
 
 
 class Processor:
@@ -30,32 +31,33 @@ class Processor:
     plugin_id: str
     closed_map: list[str]
 
-    def __init__(self,
-                 config: dict,
-                 ignore_last_run: bool = False,
-                 dburi: Optional[str] = None,
-                 ):
+    def __init__(
+        self,
+        config: dict,
+        ignore_last_run: bool = False,
+        dburi: Optional[str] = None,
+    ):
         if not dburi:
-            dburi = f'sqlite:///{config["mapping_database"].get("path")}'
+            dburi = f"sqlite:///{config['mapping_database'].get('path')}"
 
         # For situations where we will need to ignore the last_run variable,
         # This will pull it from the config, forcing the integration to use
         # the vuln_age attribute that is used in the initial run.
-        if ignore_last_run and 'last_run' in config['tenable']:
-            config['tenable'].pop('last_run')
+        if ignore_last_run and "last_run" in config["tenable"]:
+            config["tenable"].pop("last_run")
 
-        self.last_run = arrow.get(config['tenable'].get('last_run', 0))
+        self.last_run = arrow.get(config["tenable"].get("last_run", 0))
         self.config = config
         self.jira = Jira(config)
         self.tenable = Tenable(config)
         self.engine = create_engine(dburi)
-        self.max_workers = self.config['jira'].get('max_workers', 4)
-        self.closed_map = self.config['jira']['closed_map']
+        self.max_workers = self.config["jira"].get("max_workers", 4)
+        self.closed_map = self.config["jira"]["closed_map"]
         Base.metadata.create_all(self.engine)
         self.jira.setup()
-        self.finding_id = self.jira.field_by_name_map['Tenable Finding ID'].id
-        self.asset_id = self.jira.field_by_name_map['Tenable Asset UUID'].id
-        self.plugin_id = self.jira.field_by_name_map['Tenable Plugin ID'].id
+        self.finding_id = self.jira.field_by_name_map["Tenable Finding ID"].id
+        self.asset_id = self.jira.field_by_name_map["Tenable Asset UUID"].id
+        self.plugin_id = self.jira.field_by_name_map["Tenable Plugin ID"].id
 
     def get_closed_transition(self, jira_id: int) -> int:
         """
@@ -64,18 +66,19 @@ class Processor:
         attempts to gather the available transitions from the jira issue id
         presented and looks for the closed transition by name.
         """
-        # if we can get the closed transition, then we will use it.
-        if self.config['jira'].get('closed_id'):
-            return self.config['jira'].get('closed_id')
+        # If we can get the closed transition, then we will use it.
+        if self.config["jira"].get("closed_id"):
+            return self.config["jira"].get("closed_id")
 
-        # if no closed_id was configured, then we will configure it ourselves
-        # using the current jira issue id as a template to get the transition
+        # If no closed_id was configured, then we will configure it ourselves
+        # using the current Jira issue id as a template to get the transition
         # we need.
         page = self.jira.api.issues.get_transitions(jira_id)
         for transition in page.transitions:
-            if transition.name == self.config['jira']['closed']:
-                self.config['jira']['closed_id'] = transition.id
+            if transition.name == self.config["jira"]["closed"]:
+                self.config["jira"]["closed_id"] = transition.id
                 return transition.id
+        raise Exception("No closed transition identified.")
 
     def close_task(self, jira_id: str):
         """
@@ -83,42 +86,39 @@ class Processor:
         """
         closed_id = self.get_closed_transition(jira_id)
         msg = {
-            'content': {
-                'text': self.config['jira']['closed_message'],
-                'type': 'text'
-            }
+            "content": {"text": self.config["jira"]["closed_message"], "type": "text"}
         }
         self.jira.api.issues.transition(
             issue_id_or_key=jira_id,
-            transition={'id': closed_id},
-            update={'comment': [{'add': {'body': {'content': [msg]}}}]}
+            transition={"id": closed_id},
+            update={"comment": [{"add": {"body": {"content": [msg]}}}]},
         )
 
-    def build_mapping_db_model(self,
-                               issuetype: str,
-                               model: Base,
-                               fields: dict[str, str],
-                               pk: str,
-                               limit: int = 100
-                               ):
+    def build_mapping_db_model(
+        self,
+        issuetype: str,
+        model: Type[Base],
+        fields: dict[str, str],
+        pk: str,
+        limit: int = 100,
+    ):
         """
         Queries Jira and builds the database cache based off of the results of
         the search for the given database model.
         """
-        key = self.config['jira']['project']['key']
-        cmap = ', '.join([f'"{i}"' for i in self.config['jira']['closed_map']])
-        jql = (f'project = "{key}" AND issuetype = "{issuetype}" '
-               f'AND status not in ({cmap})'
-               )
+        key = self.config["jira"]["project"]["key"]
+        cmap = ", ".join([f'"{i}"' for i in self.config["jira"]["closed_map"]])
+        jql = (
+            f'project = "{key}" AND issuetype = "{issuetype}" '
+            f"AND status not in ({cmap})"
+        )
         total = 0
         with Session(self.engine) as s:
-            for ptuple in search_generator(api=self.jira.api,
-                                           jql=jql,
-                                           fields=list(fields.keys()),
-                                           limit=limit
-                                           ):
+            for ptuple in search_generator(
+                api=self.jira.api, jql=jql, fields=list(fields.keys()), limit=limit
+            ):
                 page, total, pagenum = ptuple
-                log.debug(f'Processing page {pagenum}:{limit} of {total}')
+                log.debug(f"Processing page {pagenum}:{limit} of {total}")
                 issues = []
                 for issue in page:
                     item = {}
@@ -130,43 +130,43 @@ class Processor:
                             value = value[0]
                         item[fields[key]] = value
                     # item = {fields[k]: v for k, v in issue.fields.items()}
-                    item['updated'] = self.start_time.datetime
-                    item['jira_id'] = issue.key
+                    item["updated"] = self.start_time.datetime
+                    item["jira_id"] = issue.key
                     if not missing:
-                        log.debug(f'Adding {issue.key} to cache.')
+                        log.debug(f"Adding {issue.key} to cache.")
                         issues.append(model(**item).asdict())
                     else:
-                        log.debug(f'Skipping {issue.key} '
-                                  f'for missing {missing}')
+                        log.debug(f"Skipping {issue.key} for missing {missing}")
                 if issues:
-                    stmt = insert(model).values(issues)\
-                                        .prefix_with('OR IGNORE')
+                    stmt = insert(model).values(issues).prefix_with("OR IGNORE")
                     s.execute(stmt)
                     s.commit()
-            log.debug(f'SQLCache for {model} is {s.query(model).count()} of {total}')
+            log.debug(f"SQLCache for {model} is {s.query(model).count()} of {total}")
 
     def build_cache(self):
         """
         Build the database cache for both the Tasks and SubTasks.
         """
-        log.info('Building Task SQL Cache.')
-        self.build_mapping_db_model(issuetype=self.jira.task.name,
-                                    model=TaskMap,
-                                    fields={self.plugin_id: 'plugin_id'},
-                                    pk='plugin_id'
-                                    )
-        log.info('Building Subtask SQL Cache.')
-        self.build_mapping_db_model(issuetype=self.jira.subtask.name,
-                                    model=SubTaskMap,
-                                    fields={
-                                        self.finding_id: 'finding_id',
-                                        self.asset_id: 'asset_id',
-                                        self.plugin_id: 'plugin_id'
-                                    },
-                                    pk='finding_id'
-                                    )
+        log.info("Building Task SQL Cache.")
+        self.build_mapping_db_model(
+            issuetype=self.jira.task.name,
+            model=TaskMap,
+            fields={self.plugin_id: "plugin_id"},
+            pk="plugin_id",
+        )
+        log.info("Building Subtask SQL Cache.")
+        self.build_mapping_db_model(
+            issuetype=self.jira.subtask.name,
+            model=SubTaskMap,
+            fields={
+                self.finding_id: "finding_id",
+                self.asset_id: "asset_id",
+                self.plugin_id: "plugin_id",
+            },
+            pk="finding_id",
+        )
 
-    def upsert_task(self, s: Session, finding: dict) -> (int | None):
+    def upsert_task(self, s: Session, finding: dict) -> str | None:
         """
         Performs task generation && checks both the local cache and Jira to
         determine if the task is a new issue or an existing and performs the
@@ -175,217 +175,223 @@ class Processor:
         task = self.jira.task.generate(finding)
 
         # If the finding related to this task is not in an open state, then
-        # there is no reason to continue.  Return back a NoneType value.
+        # there is no reason to continue. Return back a null value.
         if not task.is_open:
-            log.info(f'Finding related to Plugin {task.fields[self.plugin_id]}'
-                     ' is closed, skipping'
-                     )
+            log.info(
+                f"Finding related to Plugin {task.fields[self.plugin_id]}"
+                " is closed, skipping"
+            )
             return None
 
-        sql = s.query(TaskMap)\
-               .filter_by(plugin_id=task.fields[self.plugin_id])\
-               .one_or_none()
+        sql = (
+            s.query(TaskMap)
+            .filter_by(plugin_id=task.fields[self.plugin_id])
+            .one_or_none()
+        )
 
         # If we had a match from the SQL cache and the plugin information
         # has been updated recently, we will then update the task in Jira
-        # and return the jira issue id back to the caller.
+        # and return the Jira issue id back to the caller.
         if sql:
-            if finding.get('integration_pid_updated') > self.last_run:
-                if arrow.get(sql.updated, 'UTC') <= self.start_time:
-                    self.jira.api.issues.update(sql.jira_id,
-                                                fields=task.fields,
-                                                )
+            if finding.get("integration_pid_updated") > self.last_run:
+                if arrow.get(sql.updated, "UTC") <= self.start_time:
+                    self.jira.api.issues.update(
+                        sql.jira_id,
+                        fields=task.fields,
+                    )
                 sql.updated = datetime.utcnow()
                 s.commit()
-                log.info(f'Matched Task "{sql.jira_id}" to '
-                         'SQL Cache and updated.')
+                log.info(f'Matched Task "{sql.jira_id}" to SQL Cache and updated.')
             return sql.jira_id
 
         # As no match was found in the SQL cache, we will instead have to talk
         # to Jira to attempt to find a matching task from the open tasks
         # already in Jira.
-        cmap = ', '.join([f'"{i}"' for i in self.closed_map])
-        jql = f'{task.jql_stmt} AND status not in ({cmap})'
-        page = self.jira.api.issues.search(jql=jql,
-                                           fields=['id', 'key'],
-                                           use_iter=False
-                                           )
+        cmap = ", ".join([f'"{i}"' for i in self.closed_map])
+        jql = f"{task.jql_stmt} AND status not in ({cmap})"
+        page = self.jira.api.issues.search(
+            jql=jql, fields=["id", "key"], use_iter=False
+        )
 
-        # If only 1 match was found (and we should generally only ever have)
+        # If only 1 match was found (and we should generally only ever have
         # a single match if one exists), then we will update the sql cache with
-        # the mapping and update the task if the plugin information has been
-        # updated as of the last run.  Lastly, we will return the Jira issue id
+        # the mapping. Also update the task if the plugin information has been
+        # updated as of the last run. Lastly, we will return the Jira issue id
         # back to the caller.
         if len(page.issues) == 1:
-            sql = TaskMap(plugin_id=task.fields[self.plugin_id],
-                          jira_id=page.issues[0].key,
-                          updated=datetime.utcnow(),
-                          )
+            sql = TaskMap(
+                plugin_id=task.fields[self.plugin_id],
+                jira_id=page.issues[0].key,
+                updated=datetime.utcnow(),
+            )
             s.add(sql)
             s.commit()
-            if finding.get('integration_pid_updated') > self.last_run:
-                self.jira.api.issues.update(sql.jira_id,
-                                            fields=task.fields,
-                                            )
-            log.info(f'Found Task "{sql.jira_id}", '
-                     'added to SQL Cache and updated.')
+            if finding.get("integration_pid_updated") > self.last_run:
+                self.jira.api.issues.update(
+                    sql.jira_id,
+                    fields=task.fields,
+                )
+            log.info(f'Found Task "{sql.jira_id}", added to SQL Cache and updated.')
             return sql.jira_id
 
-        # If there was no match in either the sql cache or within Jira, we will
-        # then create a new task and map it back into the sql cache.  Just like
-        # above, we will then return the jira issue id to the caller.
+        # If there was no match for either the sql cache or within Jira, we will
+        # then create a new task and map it back into the sql cache. Just like
+        # above, we will then return the Jira issue id to the caller.
         if len(page.issues) == 0:
             resp = self.jira.api.issues.create(fields=task.fields)
-            sql = TaskMap(plugin_id=task.fields[self.plugin_id],
-                          jira_id=resp.key,
-                          updated=datetime.utcnow()
-                          )
+            sql = TaskMap(
+                plugin_id=task.fields[self.plugin_id],
+                jira_id=resp.key,
+                updated=datetime.utcnow(),
+            )
             s.add(sql)
             s.commit()
             log.info(f'Created Task "{resp.key}" and added to SQL Cache.')
             return resp.key
 
         # In the event that multiple tasks are returned from the search,
-        # something went seriously wrong.  We will log to the console, then
+        # something went seriously wrong. We will log to the console, then
         # raise an exception to terminate further processing at this point.
         if len(page.issues) > 1:
-            msg = ('Multiple Jira Tasks match Plugin '
-                   f'"{task.fields[self.plugin_id]}".  Jira IDs are '
-                   f'"{", ".join(i.key for i in page.issues)}".'
-                   )
+            msg = (
+                "Multiple Jira Tasks match Plugin "
+                f'"{task.fields[self.plugin_id]}".  Jira IDs are '
+                f'"{", ".join(i.key for i in page.issues)}".'
+            )
             log.error(msg)
             raise Exception(msg)
 
-    def upsert_subtask(self,
-                       s: Session,
-                       task_id: (str | None),
-                       finding: dict
-                       ) -> (int | None):
+    def upsert_subtask(
+        self, s: Session, task_id: (str | None), finding: dict
+    ) -> str | None:
         """
         Performs subtask generation && checks both the local cache and Jira to
         determine if the subtask is a new issue or an existing and performs the
         associated action.
         """
         task = self.jira.subtask.generate(finding)
-        task.fields['parent'] = {'key': str(task_id)}
-        sql = s.query(SubTaskMap)\
-               .filter_by(finding_id=UUID(task.fields[self.finding_id]))\
-               .one_or_none()
+        task.fields["parent"] = {"key": str(task_id)}
+        sql = (
+            s.query(SubTaskMap)
+            .filter_by(finding_id=UUID(task.fields[self.finding_id]))
+            .one_or_none()
+        )
 
         # If we had a match from the SQL cache we will then update the task in
-        # Jira and return the jira issue id back to the caller.
+        # Jira and return the Jira issue id back to the caller.
         if sql:
             if not task.is_open:
                 sql.is_open = task.is_open
                 sql.updated = datetime.utcnow()
                 s.commit()
                 self.close_task(sql.jira_id)
-                action = 'closed subtask'
+                action = "closed subtask"
             else:
-                self.jira.api.issues.update(sql.jira_id,
-                                            fields=task.fields,
-                                            )
-                action = 'updated subtask'
-            log.info(f'Matched SubTask "{sql.jira_id}" to '
-                     f'SQL Cache and {action}.'
-                     )
+                self.jira.api.issues.update(
+                    sql.jira_id,
+                    fields=task.fields,
+                )
+                action = "updated subtask"
+            log.info(f'Matched SubTask "{sql.jira_id}" to SQL Cache and {action}.')
             return sql.jira_id
 
         # If the task is not in the SQL cache and isn't an open subtask, we
         # should then skip this item.
         elif not sql and not task.is_open:
-            log.info(f'Subtask {task.fields[self.finding_id]} is not in the '
-                     'SQL cache and is not open.  Skipping.'
-                     )
+            log.info(
+                f"Subtask {task.fields[self.finding_id]} is not in the "
+                "SQL cache and is not open.  Skipping."
+            )
             return
 
         # As no match was found in the SQL cache, we will instead have to talk
-        # to Jira to attempt to find a matching subtask from the open subtasks
+        # to Jira to attempt to find a matching subtask from the open sub-tasks
         # already in Jira.
-        cmap = ', '.join([f'"{i}"' for i in self.config['jira']['closed_map']])
-        jql = f'{task.jql_stmt} AND status not in ({cmap})'
-        page = self.jira.api.issues.search(jql=jql,
-                                           fields=['id', 'key'],
-                                           use_iter=False
-                                           )
+        cmap = ", ".join([f'"{i}"' for i in self.config["jira"]["closed_map"]])
+        jql = f"{task.jql_stmt} AND status not in ({cmap})"
+        page = self.jira.api.issues.search(
+            jql=jql, fields=["id", "key"], use_iter=False
+        )
         match len(page.issues):
             # If only 1 match was found (and we should generally only ever
             # have) a single match if one exists), then we will update the sql
-            # cache with the mapping and update the task.  Lastly, we will
+            # cache with the mapping and update the task. Lastly, we will
             # return the Jira issue id back to the caller.
             case 1:
-                sql = SubTaskMap(plugin_id=task.fields[self.plugin_id],
-                                 asset_id=task.fields[self.asset_id][0],
-                                 finding_id=task.fields[self.finding_id],
-                                 jira_id=page.issues[0].key,
-                                 is_open=task.is_open,
-                                 updated=datetime.utcnow(),
-                                 )
+                sql = SubTaskMap(
+                    plugin_id=task.fields[self.plugin_id],
+                    asset_id=task.fields[self.asset_id][0],
+                    finding_id=task.fields[self.finding_id],
+                    jira_id=page.issues[0].key,
+                    is_open=task.is_open,
+                    updated=datetime.utcnow(),
+                )
                 s.add(sql)
                 s.commit()
                 if task.is_open:
-                    self.jira.api.issues.update(sql.jira_id,
-                                                fields=task.fields,
-                                                )
-                    action = 'updated subtask'
+                    self.jira.api.issues.update(
+                        sql.jira_id,
+                        fields=task.fields,
+                    )
+                    action = "updated subtask"
                 else:
                     self.close_task(sql.jira_id)
-                    action = 'closed subtask'
-                log.info(f'Found Subtask "{sql.jira_id}", '
-                         f'added to SQL Cache and {action}.')
+                    action = "closed subtask"
+                log.info(
+                    f'Found Subtask "{sql.jira_id}", added to SQL Cache and {action}.'
+                )
                 return sql.jira_id
 
-            # If there was no match in either the sql cache or within Jira, we
+            # If there was no match for either the sql cache or within Jira, we
             # will then create a new task and map it back into the sql cache.
-            # Just like above, we will then return the jira issue id to the
+            # Just like above, we will then return the Jira issue id to the
             # caller.
             case 0:
                 if task.is_open:
                     resp = self.jira.api.issues.create(fields=task.fields)
-                    sql = SubTaskMap(plugin_id=task.fields[self.plugin_id],
-                                     asset_id=task.fields[self.asset_id][0],
-                                     finding_id=task.fields[self.finding_id],
-                                     jira_id=resp.key,
-                                     is_open=task.is_open,
-                                     updated=datetime.utcnow(),
-                                     )
+                    sql = SubTaskMap(
+                        plugin_id=task.fields[self.plugin_id],
+                        asset_id=task.fields[self.asset_id][0],
+                        finding_id=task.fields[self.finding_id],
+                        jira_id=resp.key,
+                        is_open=task.is_open,
+                        updated=datetime.utcnow(),
+                    )
                     s.add(sql)
                     s.commit()
-                    log.info(f'Created Subtask "{resp.key}" and '
-                             'added to SQL Cache.'
-                             )
+                    log.info(f'Created Subtask "{resp.key}" and added to SQL Cache.')
                     return resp.key
 
             # In the event that multiple tasks are returned from the
-            # search, something went seriously wrong.  We will log to the
+            # search, something went seriously wrong. We will log to the
             # console, then raise an exception to terminate further
             # processing at this point.
             case _:
-                msg = ('Multiple Jira SubTasks match Finding '
-                       f'"{task.fields[self.finding_id]}".  Jira IDs are '
-                       f'"{", ".join(i.key for i in page.issues)}".'
-                       '  SKIPPING.'
-                       )
+                msg = (
+                    "Multiple Jira SubTasks match Finding "
+                    f'"{task.fields[self.finding_id]}".  Jira IDs are '
+                    f'"{", ".join(i.key for i in page.issues)}".'
+                    "  SKIPPING."
+                )
                 log.error(msg)
                 raise Exception(msg)
 
-    def close_dead_assets(self, dead_assets: iter):
+    def close_dead_assets(self, dead_assets: Iterable):
         """
         Closes all subtasks associated with dead hosts.
         """
         with Session(self.engine) as s:
-            # For each dead asset we will query all the of the subtasks
-            # associated with it and then close each of those subtasks.
+            # For each dead asset we will query all the of the sub-tasks
+            # associated with it and then close each of those sub-tasks.
             for asset in dead_assets:
-                issues = s.query(SubTaskMap)\
-                          .filter_by(asset_id=UUID(asset['id']))\
-                          .all()
+                issues = s.query(SubTaskMap).filter_by(asset_id=UUID(asset["id"])).all()
                 for issue in issues:
                     issue.is_open = False
                     self.close_task(issue.jira_id)
-                    log.info(f'Closed SubTask {issue.jira_id} as it\'s '
-                             'associated to a dead host.'
-                             )
+                    log.info(
+                        f"Closed SubTask {issue.jira_id} as it's "
+                        "associated to a dead host."
+                    )
             s.commit()
 
     def close_empty_tasks(self):
@@ -393,23 +399,25 @@ class Processor:
         Close tasks that have no open subtasks associated with them.
         """
         with Session(self.engine) as s:
-            # First we will mass delete all of the closed subtasks.
+            # First we will mass delete all the closed sub-tasks.
             rm_stmt = delete(SubTaskMap).where(SubTaskMap.is_open == False)
             s.execute(rm_stmt)
 
-            # Lastly we will look for all of the
-            close_me = s.query(TaskMap, SubTaskMap)\
-                        .outerjoin(SubTaskMap,
-                                   TaskMap.plugin_id == SubTaskMap.plugin_id)\
-                        .filter(SubTaskMap.plugin_id == None)\
-                        .all()
+            # Next we will look for all the tasks that have no associated sub-tasks.
+            close_me = (
+                s.query(TaskMap, SubTaskMap)
+                .outerjoin(SubTaskMap, TaskMap.plugin_id == SubTaskMap.plugin_id)
+                .filter(SubTaskMap.plugin_id == None)
+                .all()
+            )
 
             # Using as many threads as we need (up to the max configured)
-            # go ahead and close the taska that have no open subtasks.
+            # go ahead and close the tasks that have no open sub-tasks.
             with ThreadPoolExecutor(max_workers=self.max_workers) as e:
                 for task, _ in close_me:
-                    log.info(f'Closing Task "{task.jira_id}" '
-                             'as it has no open SubTasks')
+                    log.info(
+                        f'Closing Task "{task.jira_id}" as it has no open SubTasks'
+                    )
                     e.submit(self.close_task, task.jira_id)
 
     def finding_job(self, finding: dict):
@@ -434,28 +442,28 @@ class Processor:
         # build the db cache
         self.build_cache()
 
-        # If only a single thread was set, then we wont even run through a
+        # If only a single thread was set, then we won't even run through a
         # threaded execution worker.
         if self.max_workers <= 1:
             for finding in findings:
                 self.finding_job(finding)
 
         # Using as many threads as we need (up to the max configured)
-        # go ahead and process the findings.  We will store the job results
-        # and confirm that no exceptions had occurred.  if any did, then we'll
+        # go ahead and process the findings. We will store the job results
+        # and confirm that no exceptions had occurred. If any did, then we'll
         # raise those exceptions and refuse to continue with closing any issues
         # to ensure that we don't put the project into a weird state.
         else:
             jobs = []
             exc_count = 0
 
-            # launch the threat executor and store each future job for later
+            # Launch the threat executor and store each future job for later
             # analysis.
             with ThreadPoolExecutor(max_workers=self.max_workers) as e:
                 for finding in findings:
                     jobs.append(e.submit(self.finding_job, finding))
 
-            # Check each job to see if any exceptions were raised.  If so, then
+            # Check each job to see if any exceptions were raised. If so, then
             # log those exceptions and increment the exception counter.
             for job in jobs:
                 if job.exception():
@@ -465,16 +473,17 @@ class Processor:
             # If we have a non-zero value from the exception counter, then
             # log the total number of exceptions encountered and terminate.
             if exc_count > 0:
-                log.error(f'Refusing to continue ({exc_count} errors) '
-                          '& terminating sync.')
+                log.error(
+                    f"Refusing to continue ({exc_count} errors) & terminating sync."
+                )
                 return
 
-        # cleanup the dead hosts and clear out the empty tasks.
+        # Clean-up the dead hosts and clear out the empty tasks.
         self.close_dead_assets(asset_cleanup)
         self.close_empty_tasks()
 
-        # update the last_run timestamp with the time that we started the sync.
-        self.config['tenable']['last_run'] = int(self.start_time.timestamp())
+        # Update the last_run timestamp with the time that we started the sync.
+        self.config["tenable"]["last_run"] = int(self.start_time.timestamp())
         self.finished_time = arrow.utcnow()
 
         self.engine.dispose()
