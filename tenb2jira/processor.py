@@ -489,5 +489,4 @@ class Processor:
         self.engine.dispose()
         # Delete the mapping database.
         if cleanup:
-            with Path(self.config["mapping_database"].get("path")) as p:
-                p.unlink()
+            Path(self.config["mapping_database"].get("path")).unlink()
