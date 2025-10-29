@@ -1,30 +1,31 @@
-from typing import List, Dict, Optional
 from enum import Enum
+from typing import Dict, List, Optional
+
 from pydantic import BaseModel, Field, ValidationError
 
 
 class Platform(str, Enum):
-    tvm: str = 'tvm'
-    tsc: str = 'tsc'
+    tvm: str = "tvm"
+    tsc: str = "tsc"
 
 
 class Severity(str, Enum):
-    critical = 'critical'
-    high = 'high'
-    medium = 'medium'
-    low = 'low'
-    info = 'info'
+    critical = "critical"
+    high = "high"
+    medium = "medium"
+    low = "low"
+    info = "info"
 
 
 class TaskType(str, Enum):
-    task: str = 'task'
-    subtask: str = 'subtask'
+    task: str = "task"
+    subtask: str = "subtask"
 
 
 class State(str, Enum):
-    open = 'open'
-    reopened = 'reopened'
-    fixed = 'fixed'
+    open = "open"
+    reopened = "reopened"
+    fixed = "fixed"
 
 
 class JiraParagraph(BaseModel):
@@ -62,6 +63,7 @@ class JiraTask(BaseModel, use_enum_values=True):
     id: Optional[int] = None
     name: str
     type: str
+    closed_id: Optional[str]
     search: Dict[Platform, List[str]]
     summary: Dict[Platform, str]
     description: JiraDescription
@@ -114,7 +116,7 @@ class Configuration(BaseModel, use_enum_values=True):
     mapping_database: MappingDatabase
 
 
-def validate(config: dict) -> dict:
+def validate(config: dict) -> list:
     """
     Passes the configuration object to pydantic to validate against the config
     schema and returns a list of errors to the configuration observed.
