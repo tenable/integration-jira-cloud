@@ -61,6 +61,18 @@ def jira_table(config: dict) -> Table:
     table.add_row("API Token", f"{config['jira']['api_token'][:4]}...")
     table.add_row("Closed Transition", config["jira"]["closed"])
     table.add_row("Severity Map", str(config["jira"]["severity_map"]))
+    table.add_row(
+        "Use VPR for Severity?", str(config["jira"].get("use_vpr_severity_map", False))
+    )
+    table.add_row(
+        "VPR Sev Map",
+        "\n".join(
+            [
+                f"* {i['lower_bound']} -> {i['priority']}"
+                for i in config["jira"].get("vpr_sev_map", [])
+            ]
+        ),
+    )
     table.add_row("State Map", str(config["jira"]["state_map"]))
     table.add_row("Max Workers", str(config["jira"]["max_workers"]))
     table.add_row("Project Key", config["jira"]["project"]["key"])

@@ -45,6 +45,11 @@ class SeverityMap(BaseModel):
     low: int
 
 
+class VPRSeverityMap(BaseModel):
+    priority: int
+    lower_bound: float
+
+
 class JiraField(BaseModel, use_enum_values=True):
     id: Optional[str] = None
     name: str
@@ -55,6 +60,7 @@ class JiraField(BaseModel, use_enum_values=True):
     description: Optional[str] = None
     task_types: List[TaskType]
     map_to_priority: Optional[bool] = None
+    map_to_vpr_priority: Optional[bool] = None
     platform_id: Optional[bool] = None
     static_value: Optional[str] = None
 
@@ -91,6 +97,8 @@ class Jira(BaseModel, use_enum_values=True):
     project: JiraProject
     fields: List[JiraField]
     screens: Optional[List[int]] = None
+    use_vpr_severity_map: Optional[bool] = None
+    vpr_sev_map: Optional[List[VPRSeverityMap]] = None
 
 
 class Tenable(BaseModel, use_enum_values=True):

@@ -1,3 +1,4 @@
+import logging
 from typing import Any, Optional
 
 from restfly.utils import trunc
@@ -14,6 +15,7 @@ class TaskInstance:
     priority: str
 
     def __init__(self, issue_def: "Task", is_open: bool = True):
+        self._log = logging.getLogger("TaskInstance")
         self.idef = issue_def
         self.fields = {
             "project": {"key": self.idef.project_key},
@@ -56,6 +58,30 @@ class TaskInstance:
         value = str(self.fields[field_id]).lower()
         self.is_open = self.idef.state_map[value]
 
+    def gen_vpr_priority(self, field_id: str) -> None:
+        """
+        Overrides the priority based on the VPR Severity Map definitions.
+
+        Args:
+            field_id: The field key identifier
+        """
+        try:
+            value = float(self.fields[field_id])
+        except TypeError:
+            return
+
+        # For each object in the map, we will check to see if the current value meets
+        # or exceeds the lower bounded value. We will set the priority on the first
+        # match, so the assumption here is that the list is sorted from highest to
+        # lowest priority vpr score.
+        for item in self.idef.vpr_sev_map:
+            if value >= item["lower_bound"]:
+                self.priority = item["priority"]
+                self._log.debug(
+                    f"overloaded priority to {item['priority']} with VPR {value}"
+                )
+                return
+
 
 class Task:
     id: int
@@ -68,6 +94,8 @@ class Task:
     fields: list[Field]
     severity_map: dict[str, int]
     state_map: dict[str, bool]
+    vpr_sev_map: list[dict[str, float]]
+    use_vpr_severity_map: bool
 
     def __init__(
         self,
@@ -88,6 +116,8 @@ class Task:
         self.search = config["search"][platform]
         self.summary = config["summary"][platform]
         self.description = config["description"][platform]
+        self.vpr_sev_map = jira_config.get("vpr_sev_map", [])
+        self.use_vpr_severity_map = jira_config.get("use_vpr_severity_map", False)
         self.fields = fields
 
         if not self.fetch_issue_id(project):
@@ -177,4 +207,6 @@ class Task:
                 issue.gen_priority(field.id)
             if field.map_to_state:
                 issue.gen_state(field.id)
+            if field.map_to_vpr_priority and self.use_vpr_severity_map:
+                issue.gen_vpr_priority(field.id)
         return issue

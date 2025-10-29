@@ -138,6 +138,24 @@ state_map.fixed         = false
 # is 10.
 max_workers             = 4
 
+use_vpr_severity_map    = false
+[[jira.vpr_sev_map]]
+priority = 1
+lower_bound = 10.0
+
+[[jira.vpr_sev_map]]
+priority = 2
+lower_bound = 7.0
+
+[[jira.vpr_sev_map]]
+priority = 3
+lower_bound = 4.0
+
+[[jira.vpr_sev_map]]
+priority = 4
+lower_bound = 0.1
+
+
 [jira.project]
 # The key to use for the Jira project we will be managing the issues within.
 key                 = "VULN"
@@ -448,19 +466,6 @@ task_types  = ["task", "subtask"]
 attr.tvm    = "plugin.cve"
 attr.tsc    = "cve"
 
-[[jira.fields]]
-name        = "Tenable VPR Score"
-screen_tab  = "Vulnerability"
-type        = "float"
-searcher    = "numberrange"
-task_types  = ["task", "subtask"]
-attr.tvm    = "plugin.vpr.score"
-attr.tsc    = "vprScore"
-# If this is a migration from a v1 integration, then comment the type and
-# searcher fields above and uncomment the ones below to make the field
-# definition compatible with the older customfield definition.
-#type        = "readonlyfield"
-#searcher    = "textsearcher"
 
 [[jira.fields]]
 name        = "CVSSv2 Base Score"
@@ -639,3 +644,18 @@ searcher    = "textsearcher"
 task_types  = ["subtask"]
 attr.tvm    = "integration_finding_id"
 attr.tsc    = "integration_finding_id"
+
+[[jira.fields]]
+name        = "Tenable VPR Score"
+screen_tab  = "Vulnerability"
+type        = "float"
+searcher    = "numberrange"
+task_types  = ["task", "subtask"]
+attr.tvm    = "plugin.vpr.score"
+attr.tsc    = "vprScore"
+map_to_vpr_priority = true
+# If this is a migration from a v1 integration, then comment the type and
+# searcher fields above and uncomment the ones below to make the field
+# definition compatible with the older customfield definition.
+#type        = "readonlyfield"
+#searcher    = "textsearcher"
