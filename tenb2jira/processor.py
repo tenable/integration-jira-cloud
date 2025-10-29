@@ -59,7 +59,7 @@ class Processor:
         self.asset_id = self.jira.field_by_name_map["Tenable Asset UUID"].id
         self.plugin_id = self.jira.field_by_name_map["Tenable Plugin ID"].id
 
-    def get_closed_transition(self, jira_id: int) -> int:
+    def get_closed_transition(self, jira_id: int, task_type: str) -> int:
         """
         Checks the config file for the closed transition id, and if it exists
         return it.  If the transition id is not stored in the config file,
@@ -67,8 +67,8 @@ class Processor:
         presented and looks for the closed transition by name.
         """
         # If we can get the closed transition, then we will use it.
-        if self.config["jira"].get("closed_id"):
-            return self.config["jira"].get("closed_id")
+        if self.config["jira"][task_type].get("closed_id"):
+            return self.config["jira"][task_type].get("closed_id")
 
         # If no closed_id was configured, then we will configure it ourselves
         # using the current Jira issue id as a template to get the transition
@@ -76,15 +76,15 @@ class Processor:
         page = self.jira.api.issues.get_transitions(jira_id)
         for transition in page.transitions:
             if transition.name == self.config["jira"]["closed"]:
-                self.config["jira"]["closed_id"] = transition.id
+                self.config["jira"][task_type]["closed_id"] = transition.id
                 return transition.id
         raise Exception("No closed transition identified.")
 
-    def close_task(self, jira_id: str):
+    def close_task(self, jira_id: str, task_type: str):
         """
         Closes the Jira issue and appends the configured comment within Jira.
         """
-        closed_id = self.get_closed_transition(jira_id)
+        closed_id = self.get_closed_transition(jira_id, task_type)
         msg = {
             "content": {"text": self.config["jira"]["closed_message"], "type": "text"}
         }
@@ -169,7 +169,7 @@ class Processor:
     def upsert_task(self, s: Session, finding: dict) -> str | None:
         """
         Performs task generation && checks both the local cache and Jira to
-        determine if the task is a new issue or an existing and performs the
+        determine if the task is a new issue or existing and performs the
         associated action.
         """
         task = self.jira.task.generate(finding)
@@ -284,7 +284,7 @@ class Processor:
                 sql.is_open = task.is_open
                 sql.updated = datetime.utcnow()
                 s.commit()
-                self.close_task(sql.jira_id)
+                self.close_task(sql.jira_id, "subtask")
                 action = "closed subtask"
             else:
                 self.jira.api.issues.update(
@@ -335,7 +335,7 @@ class Processor:
                     )
                     action = "updated subtask"
                 else:
-                    self.close_task(sql.jira_id)
+                    self.close_task(sql.jira_id, "subtask")
                     action = "closed subtask"
                 log.info(
                     f'Found Subtask "{sql.jira_id}", added to SQL Cache and {action}.'
@@ -387,7 +387,7 @@ class Processor:
                 issues = s.query(SubTaskMap).filter_by(asset_id=UUID(asset["id"])).all()
                 for issue in issues:
                     issue.is_open = False
-                    self.close_task(issue.jira_id)
+                    self.close_task(issue.jira_id, "subtask")
                     log.info(
                         f"Closed SubTask {issue.jira_id} as it's "
                         "associated to a dead host."
@@ -418,7 +418,7 @@ class Processor:
                     log.info(
                         f'Closing Task "{task.jira_id}" as it has no open SubTasks'
                     )
-                    e.submit(self.close_task, task.jira_id)
+                    e.submit(self.close_task, task.jira_id, "task")
 
     def finding_job(self, finding: dict):
         """
