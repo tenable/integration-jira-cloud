@@ -80,6 +80,7 @@ class TaskInstance:
                 self._log.debug(
                     f"overloaded priority to {item['priority']} with VPR {value}"
                 )
+                self.fields["priority"] = {"id": str(self.priority)}
                 return
 
 
