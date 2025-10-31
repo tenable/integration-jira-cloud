@@ -141,7 +141,7 @@ max_workers             = 4
 use_vpr_severity_map    = false
 [[jira.vpr_sev_map]]
 priority = 1
-lower_bound = 10.0
+lower_bound = 9.0
 
 [[jira.vpr_sev_map]]
 priority = 2
