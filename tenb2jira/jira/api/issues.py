@@ -33,7 +33,7 @@ class IssuesAPI(APIEndpoint):
                 path="search/jql",
                 params=kwargs,
             )
-        return self._api.post("search/jql", json=kwargs)
+        return self._api.post("search/jql", json=kwargs, retry_on=[400])
 
     def get(self, issue_id_or_key: (str | int), **kwargs) -> Dict:
         return self._get(f"{str(issue_id_or_key)}", params=kwargs)
