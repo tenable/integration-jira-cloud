@@ -1,31 +1,11 @@
-from enum import Enum
-from typing import Dict, List, Optional
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, ValidationError
 
-
-class Platform(str, Enum):
-    tvm: str = "tvm"
-    tsc: str = "tsc"
-
-
-class Severity(str, Enum):
-    critical = "critical"
-    high = "high"
-    medium = "medium"
-    low = "low"
-    info = "info"
-
-
-class TaskType(str, Enum):
-    task: str = "task"
-    subtask: str = "subtask"
-
-
-class State(str, Enum):
-    open = "open"
-    reopened = "reopened"
-    fixed = "fixed"
+Platform = Literal["tvm", "tsc"]
+Severity = Literal["critical", "high", "medium", "low", "info"]
+TaskType = Literal["task", "subtask"]
+State = Literal["open", "reopened", "fixed"]
 
 
 class JiraParagraph(BaseModel):
@@ -34,8 +14,8 @@ class JiraParagraph(BaseModel):
 
 
 class JiraDescription(BaseModel, use_enum_values=True):
-    tvm: List[JiraParagraph]
-    tsc: List[JiraParagraph]
+    tvm: list[JiraParagraph]
+    tsc: list[JiraParagraph]
 
 
 class SeverityMap(BaseModel):
@@ -51,27 +31,27 @@ class VPRSeverityMap(BaseModel):
 
 
 class JiraField(BaseModel, use_enum_values=True):
-    id: Optional[str] = None
+    id: str | None = None
     name: str
     screen_tab: str
     type: str
     searcher: str
-    attr: Optional[Dict[Platform, str]] = None
-    description: Optional[str] = None
-    task_types: List[TaskType]
-    map_to_priority: Optional[bool] = None
-    map_to_vpr_priority: Optional[bool] = None
-    platform_id: Optional[bool] = None
-    static_value: Optional[str] = None
+    attr: dict[Platform, str] | None = None
+    description: str | None = None
+    task_types: list[TaskType]
+    map_to_priority: bool | None = None
+    map_to_vpr_priority: bool | None = None
+    platform_id: bool | None = None
+    static_value: str | None = None
 
 
 class JiraTask(BaseModel, use_enum_values=True):
-    id: Optional[int] = None
+    id: int | None = None
     name: str
     type: str
-    closed_id: Optional[str]
-    search: Dict[Platform, List[str]]
-    summary: Dict[Platform, str]
+    closed_id: str | None
+    search: dict[Platform, list[str]]
+    summary: dict[Platform, str]
     description: JiraDescription
 
 
@@ -91,14 +71,14 @@ class Jira(BaseModel, use_enum_values=True):
     api_username: str
     url: str
     closed: str
-    closed_map: List[str]
-    state_map: Dict[State, bool]
-    severity_map: Dict[Severity, int]
+    closed_map: list[str]
+    state_map: dict[State, bool]
+    severity_map: dict[Severity, int]
     project: JiraProject
-    fields: List[JiraField]
-    screens: Optional[List[int]] = None
-    use_vpr_severity_map: Optional[bool] = None
-    vpr_sev_map: Optional[List[VPRSeverityMap]] = None
+    fields: list[JiraField]
+    screens: list[int] | None = None
+    use_vpr_severity_map: bool | None = None
+    vpr_sev_map: list[VPRSeverityMap] | None = None
 
 
 class Tenable(BaseModel, use_enum_values=True):
@@ -106,12 +86,13 @@ class Tenable(BaseModel, use_enum_values=True):
     access_key: str
     secret_key: str
     url: str
-    port: Optional[int] = 443
-    severities: List[Severity]
-    vuln_age: Optional[int] = 30
-    tsc_query_id: Optional[int] = None
-    tsc_page_size: Optional[int] = Field(ge=500, le=10000)
-    platforms: Dict[Platform, str]
+    port: int = 443
+    severities: list[Severity]
+    vuln_age: int | None = 30
+    tsc_query_id: int | None = None
+    tsc_page_size: Annotated[int | None, Field(ge=500, le=10000)] = None
+    platforms: dict[Platform, str]
+    tags: list[tuple[str, str | list[str]]] | None = None
 
 
 class MappingDatabase(BaseModel):
